@@ -32,7 +32,9 @@ jobs:
         working-directory: frontend
 
       - name: Build
-        run: bun run build
+        run: |
+          bun run build
+          cp frontend/dist/index.html frontend/dist/404.html
         working-directory: frontend
 
       - name: Upload artifact
