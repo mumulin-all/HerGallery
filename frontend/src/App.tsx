@@ -16,7 +16,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/HerGallery">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreateExhibitionPage />} />
