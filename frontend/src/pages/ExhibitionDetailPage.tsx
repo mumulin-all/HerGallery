@@ -18,12 +18,14 @@ const ExhibitionDetailPage = () => {
   const [content, setContent] = useState<string | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
 
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { data: rawExhibition, isLoading: exhibitionLoading, error: exhibitionError, refetch: refetchExhibition } = useExhibition(exhibitionId);
   const { data: rawSubmissions, isLoading: submissionsLoading, refetch: refetchSubmissions } = useSubmissions(exhibitionId);
 
   const exhibition = parseExhibition(rawExhibition);
   const submissions = parseSubmissions(rawSubmissions);
+  const isCurator =
+    !!address && !!exhibition && address.toLowerCase() === exhibition.curator.toLowerCase();
 
   // Load cover image when exhibition changes
   useEffect(() => {
@@ -167,12 +169,22 @@ const ExhibitionDetailPage = () => {
               <h2 className="text-lg font-semibold text-foreground">
                 投稿作品 <span className="text-sm font-normal text-muted-foreground">({submissions.length})</span>
               </h2>
-              <button
-                onClick={() => setShowSubmitModal(true)}
-                className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent"
-              >
-                我要投稿
-              </button>
+              <div className="flex items-center gap-3">
+                {isCurator && (
+                  <Link
+                    to={`/exhibition/${exhibitionId}/manage`}
+                    className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    管理投稿
+                  </Link>
+                )}
+                <button
+                  onClick={() => setShowSubmitModal(true)}
+                  className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent"
+                >
+                  我要投稿
+                </button>
+              </div>
             </div>
 
             {submissionsLoading && (

@@ -7,6 +7,7 @@ import { config } from "@/config/wagmi";
 import HomePage from "./pages/HomePage";
 import ExhibitionDetailPage from "./pages/ExhibitionDetailPage";
 import CreateExhibitionPage from "./pages/CreateExhibitionPage";
+import ManageExhibitionPage from "./pages/ManageExhibitionPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreateExhibitionPage />} />
             <Route path="/exhibition/:id" element={<ExhibitionDetailPage />} />
+            <Route path="/exhibition/:id/manage" element={<ManageExhibitionPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
