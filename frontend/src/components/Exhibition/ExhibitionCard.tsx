@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Exhibition } from '@/data/mockData';
+import { Exhibition } from '@/config/contract';
 import { shortenAddress, relativeTime } from '@/lib/format';
 import { getAllIPFSUrls } from '@/services/ipfs';
 
@@ -47,9 +47,9 @@ const ExhibitionCard = ({ exhibition, index }: Props) => {
               </svg>
             </div>
           )}
-          {!exhibition.isActive && (
+          {exhibition.flagged && (
             <div className="absolute top-3 right-3 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              已关闭
+              已隐藏
             </div>
           )}
         </div>
@@ -62,6 +62,18 @@ const ExhibitionCard = ({ exhibition, index }: Props) => {
           <p className="mt-1 text-xs text-muted-foreground">
             {shortenAddress(exhibition.curator)}
           </p>
+          {exhibition.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {exhibition.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-muted-foreground"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="mt-3 flex items-center justify-between">
             <span className="inline-flex items-center rounded-full border border-primary/30 px-2.5 py-0.5 text-xs font-medium text-primary">
               {exhibition.submissionCount} 投稿

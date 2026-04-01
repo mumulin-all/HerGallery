@@ -1,23 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Submission } from '@/config/contract';
+import { CONTENT_TYPE_LABELS, Submission } from '@/config/contract';
 import DisplayName from '@/components/ui/DisplayName';
 import { relativeTime } from '@/lib/format';
-import { getAllIPFSUrls } from '@/services/ipfs';
-
-const CONTENT_TYPES_MAP: Record<string, string> = {
-  '0': '二创',
-  '1': '证言',
-  '2': '截图',
-  '3': '链接',
-};
-
-const CONTENT_ICONS_MAP: Record<string, string> = {
-  '0': '🎨',
-  '1': '💬',
-  '2': '📸',
-  '3': '🔗',
-};
+import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
 
 interface Props {
   submission: Submission;
@@ -28,12 +14,38 @@ interface Props {
 
 const SubmissionDetailModal = ({ submission, onClose }: Props) => {
   const [currentGateway, setCurrentGateway] = useState(0);
+  const [payloadText, setPayloadText] = useState('');
+  const [payloadLink, setPayloadLink] = useState('');
+  const [imageHash, setImageHash] = useState('');
 
-  const contentType = CONTENT_TYPES_MAP[submission.contentType] || submission.contentType;
-  const contentIcon = CONTENT_ICONS_MAP[submission.contentType] || '📌';
-  const isImageType = submission.contentType === '0' || submission.contentType === '2' || submission.contentType === 0 || submission.contentType === 2;
-  const ipfsUrls = submission.contentHash && isImageType ? getAllIPFSUrls(submission.contentHash) : [];
+  const contentType = CONTENT_TYPE_LABELS[submission.contentType] || submission.contentType;
+  const contentIcon = submission.contentType === 'creation' ? '🎨' : '🧾';
+  const ipfsUrls = imageHash ? getAllIPFSUrls(imageHash) : [];
   const imageUrl = ipfsUrls[currentGateway] || null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getFromIPFS(submission.contentHash)
+      .then((payload) => {
+        if (!cancelled) {
+          setPayloadText(payload.text || '');
+          setPayloadLink(payload.link || '');
+          setImageHash(payload.imageHash || '');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPayloadText('');
+          setPayloadLink('');
+          setImageHash('');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [submission.contentHash]);
 
   const handleImageError = () => {
     if (currentGateway < ipfsUrls.length - 1) {
@@ -78,6 +90,21 @@ const SubmissionDetailModal = ({ submission, onClose }: Props) => {
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             {submission.description}
           </p>
+          {payloadText && (
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap mb-4">
+              {payloadText}
+            </p>
+          )}
+          {payloadLink && (
+            <a
+              href={payloadLink}
+              target="_blank"
+              rel="noreferrer"
+              className="mb-4 inline-flex text-sm text-primary hover:underline"
+            >
+              打开参考链接
+            </a>
+          )}
 
           {imageUrl && (
             <div className="mt-4 rounded-xl overflow-hidden bg-muted">

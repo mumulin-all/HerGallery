@@ -40,7 +40,7 @@ const ExhibitionDetailPage = () => {
     if (exhibition?.contentHash) {
       setContentLoading(true);
       getFromIPFS(exhibition.contentHash)
-        .then((data) => setContent(data.content || data.description || null))
+        .then((data) => setContent(data.markdown || data.content || data.description || null))
         .catch(() => setContent(null))
         .finally(() => setContentLoading(false));
     } else {
@@ -59,7 +59,7 @@ const ExhibitionDetailPage = () => {
   };
 
   const { submitToExhibition } = useSubmitToExhibition(() => {
-    toast.success('投稿成功！');
+    toast.success('投稿已提交，等待策展人审核');
     refetchSubmissions();
   });
 
@@ -185,7 +185,7 @@ const ExhibitionDetailPage = () => {
               <SubmissionList
                 submissions={submissions}
                 exhibitionId={exhibitionId}
-                isActive={exhibition.isActive}
+                isActive={!exhibition.flagged}
               />
             )}
           </div>

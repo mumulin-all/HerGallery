@@ -11,7 +11,9 @@ interface Props {
 
 const SubmissionList = ({ submissions, exhibitionId, isActive }: Props) => {
   const [selected, setSelected] = useState<Submission | null>(null);
-  const sorted = [...submissions].sort((a, b) => b.recommendCount - a.recommendCount);
+  const sorted = [...submissions]
+    .filter((submission) => submission.status === 1 && !submission.flagged)
+    .sort((a, b) => b.recommendCount - a.recommendCount);
 
   return (
     <>

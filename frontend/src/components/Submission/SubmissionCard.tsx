@@ -1,25 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
-import { Submission } from '@/config/contract';
+import { CONTENT_TYPE_LABELS, Submission } from '@/config/contract';
 import { useRecommend, useHasRecommended } from '@/hooks/useContract';
-import { getIPFSUrl, getAllIPFSUrls } from '@/services/ipfs';
+import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
 import DisplayName from '@/components/ui/DisplayName';
 import { toast } from 'sonner';
-
-const CONTENT_TYPES_MAP: Record<string, string> = {
-  '0': '二创',
-  '1': '证言',
-  '2': '截图',
-  '3': '链接',
-};
-
-const CONTENT_ICONS_MAP: Record<string, string> = {
-  '0': '🎨',
-  '1': '💬',
-  '2': '📸',
-  '3': '🔗',
-};
 
 interface Props {
   submission: Submission;
@@ -36,21 +22,39 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
   const [count, setCount] = useState(submission.recommendCount);
   const [animating, setAnimating] = useState(false);
   const [currentGateway, setCurrentGateway] = useState(0);
+  const [imageHash, setImageHash] = useState('');
 
-  const { data: hasRecommendedFromChain } = useHasRecommended(exhibitionId, submission.id, address || '');
+  const { data: hasRecommendedFromChain } = useHasRecommended(submission.id, address || '');
   const hasLiked = hasRecommendedFromChain || localHasLiked;
 
   const { recommend } = useRecommend(() => {
     toast.success('推荐成功！');
   });
 
-  const contentType = CONTENT_TYPES_MAP[submission.contentType] || submission.contentType;
-  const contentIcon = CONTENT_ICONS_MAP[submission.contentType] || '📌';
-  const isImageType = submission.contentType === '0' || submission.contentType === '2' || submission.contentType === 0 || submission.contentType === 2;
-  const ipfsUrls = submission.contentHash && isImageType
-    ? getAllIPFSUrls(submission.contentHash)
-    : [];
+  const contentType = CONTENT_TYPE_LABELS[submission.contentType] || submission.contentType;
+  const contentIcon = submission.contentType === 'creation' ? '🎨' : '🧾';
+  const ipfsUrls = imageHash ? getAllIPFSUrls(imageHash) : [];
   const imageUrl = ipfsUrls[currentGateway] || null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getFromIPFS(submission.contentHash)
+      .then((payload) => {
+        if (!cancelled) {
+          setImageHash(payload.imageHash || '');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setImageHash('');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [submission.contentHash]);
 
   const handleImageError = () => {
     if (currentGateway < ipfsUrls.length - 1) {
