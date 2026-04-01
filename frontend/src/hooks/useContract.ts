@@ -9,6 +9,21 @@ const publicClient = createPublicClient({
   transport: http('https://avalanche-fuji-c-chain.publicnode.com'),
 });
 
+export interface UserSubmissionRecord extends Submission {
+  exhibitionTitle: string;
+}
+
+export interface UserActivitySummary {
+  submissions: UserSubmissionRecord[];
+  hasFirstSubmissionBadge: boolean;
+  milestoneBadges: Array<{
+    submissionId: number;
+    exhibitionId: number;
+    exhibitionTitle: string;
+    recommendCount: number;
+  }>;
+}
+
 export function useExhibitions() {
   return useReadContract({
     address: CONTRACT_ADDRESS,
@@ -91,6 +106,16 @@ export function useHasSetUsername(address: string) {
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: 'hasSetUsername',
+    args: [address as `0x${string}`],
+    query: { enabled: !!address },
+  });
+}
+
+export function useHasSubmitted(address: string) {
+  return useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'hasSubmitted',
     args: [address as `0x${string}`],
     query: { enabled: !!address },
   });
@@ -384,4 +409,65 @@ export function parseSubmission(raw: any): Submission | null {
 export function parseSubmissions(raw: any): Submission[] {
   if (!raw || !Array.isArray(raw)) return [];
   return raw.map(parseSubmission).filter(Boolean) as Submission[];
+}
+
+export async function fetchUserActivity(address: string): Promise<UserActivitySummary> {
+  const normalizedAddress = address.toLowerCase();
+
+  const [rawExhibitions, rawHasSubmitted] = await Promise.all([
+    publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'getAllExhibitions',
+    }),
+    publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'hasSubmitted',
+      args: [address as `0x${string}`],
+    }),
+  ]);
+
+  const exhibitions = parseExhibitions(rawExhibitions);
+  const submissionGroups = await Promise.all(
+    exhibitions.map(async (exhibition) => {
+      const rawSubmissions = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'getSubmissions',
+        args: [BigInt(exhibition.id)],
+      });
+
+      return {
+        exhibition,
+        submissions: parseSubmissions(rawSubmissions),
+      };
+    })
+  );
+
+  const submissions = submissionGroups
+    .flatMap(({ exhibition, submissions }) =>
+      submissions
+        .filter((submission) => submission.creator.toLowerCase() === normalizedAddress)
+        .map((submission) => ({
+          ...submission,
+          exhibitionTitle: exhibition.title,
+        }))
+    )
+    .sort((left, right) => right.createdAt - left.createdAt);
+
+  const milestoneBadges = submissions
+    .filter((submission) => submission.recommendCount >= 10)
+    .map((submission) => ({
+      submissionId: submission.id,
+      exhibitionId: submission.exhibitionId,
+      exhibitionTitle: submission.exhibitionTitle,
+      recommendCount: submission.recommendCount,
+    }));
+
+  return {
+    submissions,
+    hasFirstSubmissionBadge: Boolean(rawHasSubmitted),
+    milestoneBadges,
+  };
 }
