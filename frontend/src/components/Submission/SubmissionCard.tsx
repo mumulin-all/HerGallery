@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { CONTENT_TYPE_LABELS, Submission } from '@/config/contract';
-import { useRecommend, useHasRecommended } from '@/hooks/useContract';
+import { useRecommend, useHasRecommended, useHasWitnessed, useWitness } from '@/hooks/useContract';
 import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
 import DisplayName from '@/components/ui/DisplayName';
 import { toast } from 'sonner';
@@ -18,17 +18,25 @@ interface Props {
 const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetail }: Props) => {
   const { address, isConnected } = useAccount();
   const [isRecommending, setIsRecommending] = useState(false);
+  const [isWitnessing, setIsWitnessing] = useState(false);
   const [localHasLiked, setLocalHasLiked] = useState(false);
+  const [localHasWitnessed, setLocalHasWitnessed] = useState(false);
   const [count, setCount] = useState(submission.recommendCount);
+  const [witnessCount, setWitnessCount] = useState(submission.witnessCount);
   const [animating, setAnimating] = useState(false);
   const [currentGateway, setCurrentGateway] = useState(0);
   const [imageHash, setImageHash] = useState('');
 
   const { data: hasRecommendedFromChain } = useHasRecommended(submission.id, address || '');
+  const { data: hasWitnessedFromChain } = useHasWitnessed(submission.id, address || '');
   const hasLiked = hasRecommendedFromChain || localHasLiked;
+  const hasWitnessed = hasWitnessedFromChain || localHasWitnessed;
 
   const { recommend } = useRecommend(() => {
     toast.success('推荐成功！');
+  });
+  const { witness } = useWitness(() => {
+    toast.success('见证成功！');
   });
 
   const contentType = CONTENT_TYPE_LABELS[submission.contentType] || submission.contentType;
@@ -85,6 +93,27 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
     }
   };
 
+  const handleWitness = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isConnected) {
+      toast.error('请先连接钱包');
+      return;
+    }
+    if (hasWitnessed) return;
+
+    setIsWitnessing(true);
+    try {
+      await witness(submission.id);
+      setLocalHasWitnessed(true);
+      setWitnessCount((current) => current + 1);
+      toast.success('交易已发送，请等待确认...');
+    } catch (err: any) {
+      toast.error(err.message || '见证失败，请重试');
+    } finally {
+      setIsWitnessing(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -128,21 +157,35 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
         </div>
       )}
 
-      {/* Recommend */}
-      <button
-        onClick={handleLike}
-        disabled={isRecommending}
-        className={`flex shrink-0 flex-col items-center gap-1 rounded-lg border px-3 py-2 text-sm transition-all ${
-          hasLiked
-            ? 'border-primary/30 bg-primary/10 text-primary'
-            : 'border-border text-muted-foreground hover:border-primary/30 hover:text-primary'
-        }`}
-      >
-        <span className={animating ? 'animate-heartbeat' : ''}>
-          {hasLiked ? '❤️' : '🤍'}
-        </span>
-        <span className="text-xs font-medium">{count}</span>
-      </button>
+      <div className="flex shrink-0 items-center gap-2">
+        <button
+          onClick={handleWitness}
+          disabled={isWitnessing}
+          className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-2 text-sm transition-all ${
+            hasWitnessed
+              ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+              : 'border-border text-muted-foreground hover:border-emerald-300 hover:text-emerald-600'
+          }`}
+        >
+          <span>{hasWitnessed ? '✓' : '◌'}</span>
+          <span className="text-xs font-medium">{witnessCount}</span>
+        </button>
+
+        <button
+          onClick={handleLike}
+          disabled={isRecommending}
+          className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-2 text-sm transition-all ${
+            hasLiked
+              ? 'border-primary/30 bg-primary/10 text-primary'
+              : 'border-border text-muted-foreground hover:border-primary/30 hover:text-primary'
+          }`}
+        >
+          <span className={animating ? 'animate-heartbeat' : ''}>
+            {hasLiked ? '❤️' : '🤍'}
+          </span>
+          <span className="text-xs font-medium">{count}</span>
+        </button>
+      </div>
     </motion.div>
   );
 };

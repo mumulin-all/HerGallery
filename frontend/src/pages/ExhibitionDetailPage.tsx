@@ -66,6 +66,7 @@ const ExhibitionDetailPage = () => {
   });
 
   const totalRecommends = submissions.reduce((sum, s) => sum + s.recommendCount, 0);
+  const totalWitnesses = submissions.reduce((sum, s) => sum + s.witnessCount, 0);
 
   const handleSubmit = async (data: { contentType: string; contentHash: string; title: string; description: string }) => {
     if (!isConnected) {
@@ -205,7 +206,14 @@ const ExhibitionDetailPage = () => {
           {/* Sidebar */}
           <aside className="w-full shrink-0 lg:w-80">
             <div className="sticky top-24">
-              <ExhibitionInfo exhibition={exhibition} totalRecommends={totalRecommends} />
+              <ExhibitionInfo
+                exhibition={exhibition}
+                totalRecommends={totalRecommends}
+                totalWitnesses={totalWitnesses}
+                onTipSuccess={() => {
+                  refetchExhibition();
+                }}
+              />
             </div>
           </aside>
         </div>

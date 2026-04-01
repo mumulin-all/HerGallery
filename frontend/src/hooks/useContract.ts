@@ -2,7 +2,7 @@ import { useReadContract } from 'wagmi';
 import { useAccount, useWalletClient } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI, Exhibition, Submission } from '@/config/contract';
 import { avalancheFuji } from 'viem/chains';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, http, parseEther } from 'viem';
 
 const publicClient = createPublicClient({
   chain: avalancheFuji,
@@ -305,6 +305,40 @@ export function useRejectSubmission(onSuccess?: () => void) {
   };
 
   return { rejectSubmission };
+}
+
+export function useTipExhibition(onSuccess?: () => void) {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  const tipExhibition = async (exhibitionId: number, amountInAvax: string) => {
+    if (!walletClient || !address) {
+      throw new Error('Wallet not connected');
+    }
+
+    const normalizedAmount = amountInAvax.trim();
+    if (!normalizedAmount || Number(normalizedAmount) <= 0) {
+      throw new Error('Tip amount must be greater than 0');
+    }
+
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'tipExhibition',
+      args: [BigInt(exhibitionId)],
+      value: parseEther(normalizedAmount),
+      account: address,
+      chain: avalancheFuji,
+    });
+
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === 'success') {
+      onSuccess?.();
+    }
+    return hash;
+  };
+
+  return { tipExhibition };
 }
 
 export function parseExhibition(raw: any): Exhibition | null {
