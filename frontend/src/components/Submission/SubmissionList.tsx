@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Submission } from '@/config/contract';
 import SubmissionCard from './SubmissionCard';
 import SubmissionDetailModal from './SubmissionDetailModal';
@@ -10,10 +11,27 @@ interface Props {
 }
 
 const SubmissionList = ({ submissions, exhibitionId, isActive }: Props) => {
-  const [selected, setSelected] = useState<Submission | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const sorted = [...submissions]
     .filter((submission) => submission.status === 1 && !submission.flagged)
     .sort((a, b) => b.recommendCount - a.recommendCount);
+  const selectedSubmissionId = searchParams.get('submission');
+  const selected = useMemo(() => {
+    if (!selectedSubmissionId) return null;
+    return sorted.find((submission) => submission.id === Number(selectedSubmissionId)) ?? null;
+  }, [selectedSubmissionId, sorted]);
+
+  const openSubmission = (submission: Submission) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('submission', String(submission.id));
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const closeSubmission = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('submission');
+    setSearchParams(nextParams, { replace: true });
+  };
 
   return (
     <>
@@ -25,7 +43,7 @@ const SubmissionList = ({ submissions, exhibitionId, isActive }: Props) => {
             index={i}
             exhibitionId={exhibitionId}
             isActive={isActive}
-            onViewDetail={setSelected}
+            onViewDetail={openSubmission}
           />
         ))}
         {sorted.length === 0 && (
@@ -38,7 +56,7 @@ const SubmissionList = ({ submissions, exhibitionId, isActive }: Props) => {
           submission={selected}
           exhibitionId={exhibitionId}
           isActive={isActive}
-          onClose={() => setSelected(null)}
+          onClose={closeSubmission}
         />
       )}
     </>

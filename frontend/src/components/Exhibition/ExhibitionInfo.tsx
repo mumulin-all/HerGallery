@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { Exhibition } from '@/config/contract';
+import { AVALANCHE_FUJI, CONTRACT_ADDRESS, Exhibition } from '@/config/contract';
 import { formatDate } from '@/lib/format';
 import DisplayName from '@/components/ui/DisplayName';
 import { useTipExhibition } from '@/hooks/useContract';
 import { toast } from 'sonner';
+import { buildExhibitionShareUrl, copyTextToClipboard } from '@/lib/utils';
 
 interface Props {
   exhibition: Exhibition;
@@ -17,6 +18,7 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
   const { isConnected } = useAccount();
   const [tipAmount, setTipAmount] = useState('0.01');
   const [isTipping, setIsTipping] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
 
   const { tipExhibition } = useTipExhibition(() => {
     toast.success('已成功打赏展厅');
@@ -36,6 +38,18 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
       toast.error(err.message || '打赏失败，请重试');
     } finally {
       setIsTipping(false);
+    }
+  };
+
+  const handleShare = async () => {
+    setIsCopying(true);
+    try {
+      await copyTextToClipboard(buildExhibitionShareUrl(exhibition.id));
+      toast.success('展厅链接已复制');
+    } catch (err: any) {
+      toast.error(err.message || '复制链接失败');
+    } finally {
+      setIsCopying(false);
     }
   };
 
@@ -96,6 +110,22 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
     </div>
 
     <div className="rounded-xl border border-border bg-background p-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-foreground">分享展厅</p>
+          <p className="mt-1 text-xs text-muted-foreground">复制链接后，其他人可直接打开当前展厅</p>
+        </div>
+        <button
+          onClick={handleShare}
+          disabled={isCopying}
+          className="shrink-0 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+        >
+          {isCopying ? '复制中...' : '复制链接'}
+        </button>
+      </div>
+
+      <div className="mb-4 h-px bg-border" />
+
       <p className="text-sm font-medium text-foreground">打赏展厅</p>
       <p className="mt-1 text-xs text-muted-foreground">支持策展人继续维护和收录内容</p>
       <div className="mt-3 flex items-center gap-2">
@@ -115,12 +145,12 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
         </button>
       </div>
       <a
-        href={`https://testnet.snowtrace.io/address/${exhibition.curator}`}
+        href={`${AVALANCHE_FUJI.blockExplorers.default.url}/address/${CONTRACT_ADDRESS}`}
         target="_blank"
         rel="noreferrer"
         className="mt-3 inline-flex text-xs text-primary hover:underline"
       >
-        在 Snowtrace 查看策展人地址
+        在 Snowtrace 查看合约
       </a>
     </div>
   </div>
