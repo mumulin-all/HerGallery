@@ -24,6 +24,12 @@ export interface UserActivitySummary {
   }>;
 }
 
+export interface HomeExhibitionRecord extends Exhibition {
+  totalRecommends: number;
+  totalWitnesses: number;
+  hotScore: number;
+}
+
 export function useExhibitions() {
   return useReadContract({
     address: CONTRACT_ADDRESS,
@@ -470,4 +476,40 @@ export async function fetchUserActivity(address: string): Promise<UserActivitySu
     hasFirstSubmissionBadge: Boolean(rawHasSubmitted),
     milestoneBadges,
   };
+}
+
+export async function fetchHomeExhibitions(): Promise<HomeExhibitionRecord[]> {
+  const rawExhibitions = await publicClient.readContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'getAllExhibitions',
+  });
+
+  const exhibitions = parseExhibitions(rawExhibitions).filter((exhibition) => !exhibition.flagged);
+
+  const enriched = await Promise.all(
+    exhibitions.map(async (exhibition) => {
+      const rawSubmissions = await publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'getSubmissions',
+        args: [BigInt(exhibition.id)],
+      });
+
+      const submissions = parseSubmissions(rawSubmissions).filter(
+        (submission) => submission.status === 1 && !submission.flagged
+      );
+      const totalRecommends = submissions.reduce((sum, submission) => sum + submission.recommendCount, 0);
+      const totalWitnesses = submissions.reduce((sum, submission) => sum + submission.witnessCount, 0);
+
+      return {
+        ...exhibition,
+        totalRecommends,
+        totalWitnesses,
+        hotScore: totalRecommends * 0.7 + exhibition.submissionCount * 0.3,
+      };
+    })
+  );
+
+  return enriched;
 }

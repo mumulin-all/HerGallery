@@ -12,13 +12,14 @@ import MyRecordsPage from "./pages/MyRecordsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+const routerBasename = import.meta.env.DEV ? "/" : "/HerGallery";
 
 const App = () => (
   <WagmiProvider config={config}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Sonner />
-        <BrowserRouter basename="/HerGallery">
+        <BrowserRouter basename={routerBasename}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreateExhibitionPage />} />
