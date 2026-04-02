@@ -8,6 +8,115 @@ import { CONTENT_TYPE_LABELS, SUBMISSION_STATUS_LABELS } from '@/config/contract
 import { fetchUserActivity, type UserActivitySummary } from '@/hooks/useContract';
 import { relativeTime } from '@/lib/format';
 
+// ── Badge wall ────────────────────────────────────────────────────────────────
+
+interface BadgeDef {
+  id: string;
+  icon: string;
+  label: string;
+  desc: string;
+  color: string; // tailwind text color
+  bg: string;    // tailwind bg + border
+  ring: string;  // tailwind ring/glow for unlocked
+}
+
+const BADGE_DEFS: BadgeDef[] = [
+  {
+    id: 'firstSubmission',
+    icon: '🌸',
+    label: '首投者',
+    desc: '完成第一次投稿',
+    color: 'text-violet-500',
+    bg: 'bg-violet-50 border-violet-200',
+    ring: 'ring-2 ring-violet-300/60',
+  },
+  {
+    id: 'milestone',
+    icon: '✦',
+    label: '推荐里程碑',
+    desc: '单条投稿推荐达 10 次',
+    color: 'text-purple-500',
+    bg: 'bg-purple-50 border-purple-200',
+    ring: 'ring-2 ring-purple-300/60',
+  },
+];
+
+function BadgeWall({ summary }: { summary: UserActivitySummary }) {
+  const unlockedIds = new Set<string>();
+  if (summary.hasFirstSubmissionBadge) unlockedIds.add('firstSubmission');
+  if (summary.milestoneBadges.length > 0) unlockedIds.add('milestone');
+  const milestoneCount = summary.milestoneBadges.length;
+
+  return (
+    <div className="rounded-2xl border border-purple-200/60 bg-gradient-to-b from-purple-50/60 to-card p-6">
+      <h2 className="text-lg font-semibold text-purple-700">成就徽章</h2>
+      <p className="mt-1 text-xs text-purple-400">
+        {unlockedIds.size} / {BADGE_DEFS.length} 已解锁
+      </p>
+
+      {/* Badge grid — compact icons */}
+      <div className="mt-4 flex flex-wrap gap-3">
+        {BADGE_DEFS.map((def) => {
+          const unlocked = unlockedIds.has(def.id);
+          const count = def.id === 'milestone' ? milestoneCount : (unlocked ? 1 : 0);
+          return (
+            <div
+              key={def.id}
+              title={`${def.label}${def.id === 'milestone' && count > 1 ? ` × ${count}` : ''}\n${def.desc}`}
+              className={`relative flex h-14 w-14 flex-col items-center justify-center rounded-2xl border transition-all
+                ${unlocked ? `${def.bg} ${def.ring}` : 'border-border bg-muted/30 opacity-40 grayscale'}
+              `}
+            >
+              <span className="text-2xl leading-none">{def.icon}</span>
+              {/* count badge for milestones */}
+              {unlocked && count > 1 && (
+                <span className={`absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-card border border-border text-[10px] font-bold ${def.color}`}>
+                  {count}
+                </span>
+              )}
+              {/* lock icon when not unlocked */}
+              {!unlocked && (
+                <span className="absolute -right-1 -top-1 text-xs">🔒</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Unlocked badge detail list */}
+      {unlockedIds.size > 0 && (
+        <div className="mt-5 space-y-2">
+          {BADGE_DEFS.filter((d) => unlockedIds.has(d.id)).map((def) => (
+            <div key={def.id} className={`flex items-start gap-3 rounded-xl border p-3 ${def.bg}`}>
+              <span className="mt-0.5 text-lg leading-none">{def.icon}</span>
+              <div className="min-w-0">
+                <p className={`text-xs font-semibold ${def.color}`}>
+                  {def.label}
+                  {def.id === 'milestone' && milestoneCount > 1 && ` × ${milestoneCount}`}
+                </p>
+                {def.id === 'milestone' && summary.milestoneBadges.length > 0 && (
+                  <ul className="mt-1 space-y-0.5">
+                    {summary.milestoneBadges.map((b) => (
+                      <li key={`${b.exhibitionId}-${b.submissionId}`} className="truncate text-[11px] text-muted-foreground">
+                        《{b.exhibitionTitle}》· {b.recommendCount} 推荐
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {def.id === 'firstSubmission' && (
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">链上首次投稿记录已永久存证</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 const emptySummary: UserActivitySummary = {
   submissions: [],
   hasFirstSubmissionBadge: false,
@@ -94,37 +203,7 @@ const MyRecordsPage = () => {
         ) : (
           <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
             <aside className="space-y-4">
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <h2 className="text-lg font-semibold text-foreground">POAP 徽章</h2>
-                <div className="mt-4 space-y-3">
-                  <div className={`rounded-xl border p-4 ${
-                    summary.hasFirstSubmissionBadge ? 'border-primary/30 bg-primary/5' : 'border-border bg-background'
-                  }`}>
-                    <p className="text-sm font-medium text-foreground">首投徽章</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {summary.hasFirstSubmissionBadge ? '你已经完成首次投稿。' : '完成第一次投稿后自动解锁。'}
-                    </p>
-                  </div>
-
-                  {summary.milestoneBadges.length > 0 ? (
-                    summary.milestoneBadges.map((badge) => (
-                      <div key={`${badge.exhibitionId}-${badge.submissionId}`} className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-                        <p className="text-sm font-medium text-foreground">推荐里程碑徽章</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          《{badge.exhibitionTitle}》中的投稿已获得 {badge.recommendCount} 次推荐。
-                        </p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="rounded-xl border border-border bg-background p-4">
-                      <p className="text-sm font-medium text-foreground">推荐里程碑徽章</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        单条投稿推荐达到 10 次后解锁。
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <BadgeWall summary={summary} />
             </aside>
 
             <section>

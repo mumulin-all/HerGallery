@@ -4,6 +4,7 @@ import { WagmiProvider } from "wagmi";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { config } from "@/config/wagmi";
+import { POAPProvider } from "@/context/POAPContext";
 import HomePage from "./pages/HomePage";
 import ExhibitionDetailPage from "./pages/ExhibitionDetailPage";
 import CreateExhibitionPage from "./pages/CreateExhibitionPage";
@@ -19,6 +20,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Sonner />
+        <POAPProvider>
         <BrowserRouter basename={routerBasename}>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -29,6 +31,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </POAPProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </WagmiProvider>
