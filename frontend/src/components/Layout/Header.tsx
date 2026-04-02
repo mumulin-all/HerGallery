@@ -19,6 +19,7 @@ const Header = () => {
   const navItems = [
     { path: '/', label: '展厅' },
     { path: '/create', label: '创建' },
+    ...(isConnected ? [{ path: '/me', label: '我的记录' }] : []),
   ];
 
   const handleWalletClick = () => {

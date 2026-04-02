@@ -18,12 +18,14 @@ const ExhibitionDetailPage = () => {
   const [content, setContent] = useState<string | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
 
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { data: rawExhibition, isLoading: exhibitionLoading, error: exhibitionError, refetch: refetchExhibition } = useExhibition(exhibitionId);
   const { data: rawSubmissions, isLoading: submissionsLoading, refetch: refetchSubmissions } = useSubmissions(exhibitionId);
 
   const exhibition = parseExhibition(rawExhibition);
   const submissions = parseSubmissions(rawSubmissions);
+  const isCurator =
+    !!address && !!exhibition && address.toLowerCase() === exhibition.curator.toLowerCase();
 
   // Load cover image when exhibition changes
   useEffect(() => {
@@ -40,7 +42,7 @@ const ExhibitionDetailPage = () => {
     if (exhibition?.contentHash) {
       setContentLoading(true);
       getFromIPFS(exhibition.contentHash)
-        .then((data) => setContent(data.content || data.description || null))
+        .then((data) => setContent(data.markdown || data.content || data.description || null))
         .catch(() => setContent(null))
         .finally(() => setContentLoading(false));
     } else {
@@ -59,11 +61,12 @@ const ExhibitionDetailPage = () => {
   };
 
   const { submitToExhibition } = useSubmitToExhibition(() => {
-    toast.success('投稿成功！');
+    toast.success('投稿已提交，等待策展人审核');
     refetchSubmissions();
   });
 
   const totalRecommends = submissions.reduce((sum, s) => sum + s.recommendCount, 0);
+  const totalWitnesses = submissions.reduce((sum, s) => sum + s.witnessCount, 0);
 
   const handleSubmit = async (data: { contentType: string; contentHash: string; title: string; description: string }) => {
     if (!isConnected) {
@@ -167,12 +170,22 @@ const ExhibitionDetailPage = () => {
               <h2 className="text-lg font-semibold text-foreground">
                 投稿作品 <span className="text-sm font-normal text-muted-foreground">({submissions.length})</span>
               </h2>
-              <button
-                onClick={() => setShowSubmitModal(true)}
-                className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent"
-              >
-                我要投稿
-              </button>
+              <div className="flex items-center gap-3">
+                {isCurator && (
+                  <Link
+                    to={`/exhibition/${exhibitionId}/manage`}
+                    className="rounded-full border border-border px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    管理投稿
+                  </Link>
+                )}
+                <button
+                  onClick={() => setShowSubmitModal(true)}
+                  className="rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent"
+                >
+                  我要投稿
+                </button>
+              </div>
             </div>
 
             {submissionsLoading && (
@@ -185,7 +198,7 @@ const ExhibitionDetailPage = () => {
               <SubmissionList
                 submissions={submissions}
                 exhibitionId={exhibitionId}
-                isActive={exhibition.isActive}
+                isActive={!exhibition.flagged}
               />
             )}
           </div>
@@ -193,7 +206,14 @@ const ExhibitionDetailPage = () => {
           {/* Sidebar */}
           <aside className="w-full shrink-0 lg:w-80">
             <div className="sticky top-24">
-              <ExhibitionInfo exhibition={exhibition} totalRecommends={totalRecommends} />
+              <ExhibitionInfo
+                exhibition={exhibition}
+                totalRecommends={totalRecommends}
+                totalWitnesses={totalWitnesses}
+                onTipSuccess={() => {
+                  refetchExhibition();
+                }}
+              />
             </div>
           </aside>
         </div>

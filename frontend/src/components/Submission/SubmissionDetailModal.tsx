@@ -1,23 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Submission } from '@/config/contract';
+import { AVALANCHE_FUJI, CONTENT_TYPE_LABELS, Submission } from '@/config/contract';
 import DisplayName from '@/components/ui/DisplayName';
 import { relativeTime } from '@/lib/format';
-import { getAllIPFSUrls } from '@/services/ipfs';
-
-const CONTENT_TYPES_MAP: Record<string, string> = {
-  '0': '二创',
-  '1': '证言',
-  '2': '截图',
-  '3': '链接',
-};
-
-const CONTENT_ICONS_MAP: Record<string, string> = {
-  '0': '🎨',
-  '1': '💬',
-  '2': '📸',
-  '3': '🔗',
-};
+import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
+import { buildSubmissionShareUrl, copyTextToClipboard } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Props {
   submission: Submission;
@@ -28,16 +16,55 @@ interface Props {
 
 const SubmissionDetailModal = ({ submission, onClose }: Props) => {
   const [currentGateway, setCurrentGateway] = useState(0);
+  const [payloadText, setPayloadText] = useState('');
+  const [payloadLink, setPayloadLink] = useState('');
+  const [imageHash, setImageHash] = useState('');
+  const [isCopying, setIsCopying] = useState(false);
 
-  const contentType = CONTENT_TYPES_MAP[submission.contentType] || submission.contentType;
-  const contentIcon = CONTENT_ICONS_MAP[submission.contentType] || '📌';
-  const isImageType = submission.contentType === '0' || submission.contentType === '2' || submission.contentType === 0 || submission.contentType === 2;
-  const ipfsUrls = submission.contentHash && isImageType ? getAllIPFSUrls(submission.contentHash) : [];
+  const contentType = CONTENT_TYPE_LABELS[submission.contentType] || submission.contentType;
+  const contentIcon = submission.contentType === 'creation' ? '🎨' : '🧾';
+  const ipfsUrls = imageHash ? getAllIPFSUrls(imageHash) : [];
   const imageUrl = ipfsUrls[currentGateway] || null;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getFromIPFS(submission.contentHash)
+      .then((payload) => {
+        if (!cancelled) {
+          setPayloadText(payload.text || '');
+          setPayloadLink(payload.link || '');
+          setImageHash(payload.imageHash || '');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPayloadText('');
+          setPayloadLink('');
+          setImageHash('');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [submission.contentHash]);
 
   const handleImageError = () => {
     if (currentGateway < ipfsUrls.length - 1) {
       setCurrentGateway(prev => prev + 1);
+    }
+  };
+
+  const handleShare = async () => {
+    setIsCopying(true);
+    try {
+      await copyTextToClipboard(buildSubmissionShareUrl(submission.exhibitionId, submission.id));
+      toast.success('投稿链接已复制');
+    } catch (err: any) {
+      toast.error(err.message || '复制链接失败');
+    } finally {
+      setIsCopying(false);
     }
   };
 
@@ -65,19 +92,43 @@ const SubmissionDetailModal = ({ submission, onClose }: Props) => {
             ✕
           </button>
 
-          <div className="flex items-center gap-3 mb-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-lg">
               {contentIcon}
             </span>
             <span className="text-sm font-medium text-primary">
               {contentType}
             </span>
+            </div>
+            <button
+              onClick={handleShare}
+              disabled={isCopying}
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+            >
+              {isCopying ? '复制中...' : '复制链接'}
+            </button>
           </div>
 
           <h2 className="text-xl font-bold text-foreground mb-2">{submission.title}</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             {submission.description}
           </p>
+          {payloadText && (
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap mb-4">
+              {payloadText}
+            </p>
+          )}
+          {payloadLink && (
+            <a
+              href={payloadLink}
+              target="_blank"
+              rel="noreferrer"
+              className="mb-4 inline-flex text-sm text-primary hover:underline"
+            >
+              打开参考链接
+            </a>
+          )}
 
           {imageUrl && (
             <div className="mt-4 rounded-xl overflow-hidden bg-muted">
@@ -99,6 +150,14 @@ const SubmissionDetailModal = ({ submission, onClose }: Props) => {
             <span>❤️</span>
             <span className="font-semibold">{submission.recommendCount} 推荐</span>
           </div>
+          <a
+            href={`${AVALANCHE_FUJI.blockExplorers.default.url}/address/${submission.creator}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex text-xs text-primary hover:underline"
+          >
+            在 Snowtrace 查看投稿者地址
+          </a>
         </motion.div>
       </div>
     </AnimatePresence>
