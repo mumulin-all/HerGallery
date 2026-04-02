@@ -338,6 +338,102 @@ export function useRejectSubmission(onSuccess?: () => void) {
   return { rejectSubmission };
 }
 
+export function useContractOwner() {
+  return useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'owner',
+  });
+}
+
+export function useWithdrawTips(onSuccess?: () => void) {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  const withdrawTips = async (exhibitionId: number) => {
+    if (!walletClient || !address) throw new Error('Wallet not connected');
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'withdrawTips',
+      args: [BigInt(exhibitionId)],
+      account: address,
+      chain: avalancheFuji,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === 'success') onSuccess?.();
+    return hash;
+  };
+
+  return { withdrawTips };
+}
+
+export function useWithdrawStake(onSuccess?: () => void) {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  const withdrawStake = async (exhibitionId: number) => {
+    if (!walletClient || !address) throw new Error('Wallet not connected');
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'withdrawStake',
+      args: [BigInt(exhibitionId)],
+      account: address,
+      chain: avalancheFuji,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === 'success') onSuccess?.();
+    return hash;
+  };
+
+  return { withdrawStake };
+}
+
+export function useFlagSubmission(onSuccess?: () => void) {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  const flagSubmission = async (submissionId: number) => {
+    if (!walletClient || !address) throw new Error('Wallet not connected');
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'flagSubmission',
+      args: [BigInt(submissionId)],
+      account: address,
+      chain: avalancheFuji,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === 'success') onSuccess?.();
+    return hash;
+  };
+
+  return { flagSubmission };
+}
+
+export function useFlagExhibition(onSuccess?: () => void) {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  const flagExhibition = async (exhibitionId: number) => {
+    if (!walletClient || !address) throw new Error('Wallet not connected');
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'flagExhibition',
+      args: [BigInt(exhibitionId)],
+      account: address,
+      chain: avalancheFuji,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === 'success') onSuccess?.();
+    return hash;
+  };
+
+  return { flagExhibition };
+}
+
 export function useTipExhibition(onSuccess?: () => void) {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();

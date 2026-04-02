@@ -199,6 +199,7 @@ const ExhibitionDetailPage = () => {
                 submissions={submissions}
                 exhibitionId={exhibitionId}
                 isActive={!exhibition.flagged}
+                isCurator={isCurator}
               />
             )}
           </div>

@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import { AVALANCHE_FUJI, CONTRACT_ADDRESS, Exhibition } from '@/config/contract';
 import { formatDate } from '@/lib/format';
 import DisplayName from '@/components/ui/DisplayName';
-import { useTipExhibition } from '@/hooks/useContract';
+import { useTipExhibition, useContractOwner, useFlagExhibition } from '@/hooks/useContract';
 import { toast } from 'sonner';
 import { buildExhibitionShareUrl, copyTextToClipboard } from '@/lib/utils';
 
@@ -15,10 +15,19 @@ interface Props {
 }
 
 const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSuccess }: Props) => {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const [tipAmount, setTipAmount] = useState('0.01');
   const [isTipping, setIsTipping] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [isFlagging, setIsFlagging] = useState(false);
+
+  const { data: ownerAddress } = useContractOwner();
+  const isOwner = !!address && !!ownerAddress && address.toLowerCase() === (ownerAddress as string).toLowerCase();
+
+  const { flagExhibition } = useFlagExhibition(() => {
+    toast.success('展厅已隐藏');
+    onTipSuccess?.(); // reuse parent refetch
+  });
 
   const { tipExhibition } = useTipExhibition(() => {
     toast.success('已成功打赏展厅');
@@ -38,6 +47,18 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
       toast.error(err.message || '打赏失败，请重试');
     } finally {
       setIsTipping(false);
+    }
+  };
+
+  const handleFlagExhibition = async () => {
+    if (!isConnected) { toast.error('请先连接钱包'); return; }
+    setIsFlagging(true);
+    try {
+      await flagExhibition(exhibition.id);
+    } catch (err: any) {
+      toast.error(err.message || '操作失败，请重试');
+    } finally {
+      setIsFlagging(false);
     }
   };
 
@@ -153,6 +174,19 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
         在 Snowtrace 查看合约
       </a>
     </div>
+
+    {isOwner && !exhibition.flagged && (
+      <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4">
+        <p className="text-xs font-medium text-destructive mb-3">管理员操作</p>
+        <button
+          onClick={handleFlagExhibition}
+          disabled={isFlagging}
+          className="w-full rounded-lg border border-destructive/30 px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-60"
+        >
+          {isFlagging ? '处理中...' : '隐藏此展厅'}
+        </button>
+      </div>
+    )}
   </div>
   );
 };
