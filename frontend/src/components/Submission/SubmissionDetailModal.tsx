@@ -5,21 +5,29 @@ import DisplayName from '@/components/ui/DisplayName';
 import { relativeTime } from '@/lib/format';
 import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
 import { buildSubmissionShareUrl, copyTextToClipboard } from '@/lib/utils';
+import { useFlagSubmission } from '@/hooks/useContract';
 import { toast } from 'sonner';
 
 interface Props {
   submission: Submission;
   exhibitionId: number;
   isActive: boolean;
+  isCurator?: boolean;
   onClose: () => void;
 }
 
-const SubmissionDetailModal = ({ submission, onClose }: Props) => {
+const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
   const [currentGateway, setCurrentGateway] = useState(0);
   const [payloadText, setPayloadText] = useState('');
   const [payloadLink, setPayloadLink] = useState('');
   const [imageHash, setImageHash] = useState('');
   const [isCopying, setIsCopying] = useState(false);
+  const [isFlagging, setIsFlagging] = useState(false);
+
+  const { flagSubmission } = useFlagSubmission(() => {
+    toast.success('投稿已隐藏');
+    onClose();
+  });
 
   const contentType = CONTENT_TYPE_LABELS[submission.contentType] || submission.contentType;
   const contentIcon = submission.contentType === 'creation' ? '🎨' : '🧾';
@@ -65,6 +73,17 @@ const SubmissionDetailModal = ({ submission, onClose }: Props) => {
       toast.error(err.message || '复制链接失败');
     } finally {
       setIsCopying(false);
+    }
+  };
+
+  const handleFlag = async () => {
+    setIsFlagging(true);
+    try {
+      await flagSubmission(submission.id);
+    } catch (err: any) {
+      toast.error(err.message || '操作失败，请重试');
+    } finally {
+      setIsFlagging(false);
     }
   };
 
@@ -150,14 +169,25 @@ const SubmissionDetailModal = ({ submission, onClose }: Props) => {
             <span>❤️</span>
             <span className="font-semibold">{submission.recommendCount} 推荐</span>
           </div>
-          <a
-            href={`${AVALANCHE_FUJI.blockExplorers.default.url}/address/${submission.creator}`}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex text-xs text-primary hover:underline"
-          >
-            在 Snowtrace 查看投稿者地址
-          </a>
+          <div className="mt-3 flex items-center justify-between">
+            <a
+              href={`${AVALANCHE_FUJI.blockExplorers.default.url}/address/${submission.creator}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              在 Snowtrace 查看投稿者地址
+            </a>
+            {isCurator && (
+              <button
+                onClick={handleFlag}
+                disabled={isFlagging}
+                className="rounded-lg border border-destructive/30 px-3 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-60"
+              >
+                {isFlagging ? '处理中...' : '隐藏投稿'}
+              </button>
+            )}
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>

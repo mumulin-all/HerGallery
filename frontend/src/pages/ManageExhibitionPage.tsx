@@ -11,6 +11,9 @@ import {
   useExhibition,
   usePendingSubmissions,
   useRejectSubmission,
+  useWithdrawTips,
+  useWithdrawStake,
+  useFlagSubmission,
 } from '@/hooks/useContract';
 import { relativeTime } from '@/lib/format';
 import { toast } from 'sonner';
@@ -20,11 +23,15 @@ const ManageExhibitionPage = () => {
   const exhibitionId = Number(id);
   const { address, isConnected } = useAccount();
   const [actingId, setActingId] = useState<number | null>(null);
+  const [isWithdrawingTips, setIsWithdrawingTips] = useState(false);
+  const [isWithdrawingStake, setIsWithdrawingStake] = useState(false);
+  const [flaggingId, setFlaggingId] = useState<number | null>(null);
 
   const {
     data: rawExhibition,
     isLoading: exhibitionLoading,
     error: exhibitionError,
+    refetch: refetchExhibition,
   } = useExhibition(exhibitionId);
   const {
     data: rawPendingSubmissions,
@@ -46,8 +53,56 @@ const ManageExhibitionPage = () => {
     toast.success('投稿已拒绝');
     refetchPendingSubmissions();
   });
+  const { withdrawTips } = useWithdrawTips(() => {
+    toast.success('赏金已提取');
+    refetchExhibition();
+  });
+  const { withdrawStake } = useWithdrawStake(() => {
+    toast.success('质押已退还');
+    refetchExhibition();
+  });
+  const { flagSubmission } = useFlagSubmission(() => {
+    toast.success('投稿已隐藏');
+    refetchPendingSubmissions();
+  });
 
   const isCurator = !!address && !!exhibition && address.toLowerCase() === exhibition.curator.toLowerCase();
+
+  const handleWithdrawTips = async () => {
+    if (!isConnected) { toast.error('请先连接钱包'); return; }
+    setIsWithdrawingTips(true);
+    try {
+      await withdrawTips(exhibitionId);
+    } catch (err: any) {
+      toast.error(err.message || '提取失败，请重试');
+    } finally {
+      setIsWithdrawingTips(false);
+    }
+  };
+
+  const handleWithdrawStake = async () => {
+    if (!isConnected) { toast.error('请先连接钱包'); return; }
+    setIsWithdrawingStake(true);
+    try {
+      await withdrawStake(exhibitionId);
+    } catch (err: any) {
+      toast.error(err.message || '退还失败，请重试');
+    } finally {
+      setIsWithdrawingStake(false);
+    }
+  };
+
+  const handleFlagSubmission = async (submissionId: number) => {
+    if (!isConnected) { toast.error('请先连接钱包'); return; }
+    setFlaggingId(submissionId);
+    try {
+      await flagSubmission(submissionId);
+    } catch (err: any) {
+      toast.error(err.message || '操作失败，请重试');
+    } finally {
+      setFlaggingId(null);
+    }
+  };
 
   const handleAction = async (submissionId: number, action: 'approve' | 'reject') => {
     if (!isConnected) {
@@ -131,6 +186,37 @@ const ManageExhibitionPage = () => {
           </div>
         </div>
 
+        {/* Curator financial actions */}
+        {exhibition && (
+          <div className="mb-6 flex flex-wrap gap-3">
+            {exhibition.tipPool > 0 && (
+              <button
+                onClick={handleWithdrawTips}
+                disabled={isWithdrawingTips}
+                className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+              >
+                {isWithdrawingTips
+                  ? '提取中...'
+                  : `提取展厅赏金（${(exhibition.tipPool / 1e18).toFixed(4)} AVAX）`}
+              </button>
+            )}
+            {exhibition.submissionCount >= 10 && !exhibition.stakeWithdrawn && (
+              <button
+                onClick={handleWithdrawStake}
+                disabled={isWithdrawingStake}
+                className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+              >
+                {isWithdrawingStake ? '申请中...' : '申请退还质押（0.001 AVAX）'}
+              </button>
+            )}
+            {exhibition.stakeWithdrawn && (
+              <span className="inline-flex items-center rounded-xl border border-border bg-secondary px-5 py-2.5 text-sm text-muted-foreground">
+                质押已退还
+              </span>
+            )}
+          </div>
+        )}
+
         {submissionsLoading ? (
           <div className="py-24 text-center">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
@@ -171,6 +257,13 @@ const ManageExhibitionPage = () => {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-3">
+                      <button
+                        onClick={() => handleFlagSubmission(submission.id)}
+                        disabled={flaggingId === submission.id}
+                        className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-destructive/50 hover:text-destructive disabled:opacity-60"
+                      >
+                        {flaggingId === submission.id ? '处理中...' : '隐藏'}
+                      </button>
                       <button
                         onClick={() => handleAction(submission.id, 'reject')}
                         disabled={isActing}

@@ -246,6 +246,13 @@ export const CONTRACT_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
+  {
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
 ] as const;
 
 export const CONTENT_TYPE_LABELS: Record<string, string> = {
