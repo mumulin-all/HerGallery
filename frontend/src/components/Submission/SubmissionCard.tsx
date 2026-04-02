@@ -5,6 +5,7 @@ import { CONTENT_TYPE_LABELS, Submission } from '@/config/contract';
 import { useRecommend, useHasRecommended, useHasWitnessed, useWitness } from '@/hooks/useContract';
 import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
 import DisplayName from '@/components/ui/DisplayName';
+import { usePOAP } from '@/context/POAPContext';
 import { toast } from 'sonner';
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 
 const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetail }: Props) => {
   const { address, isConnected } = useAccount();
+  const { triggerMilestone } = usePOAP();
   const [isRecommending, setIsRecommending] = useState(false);
   const [isWitnessing, setIsWitnessing] = useState(false);
   const [localHasLiked, setLocalHasLiked] = useState(false);
@@ -80,12 +82,16 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
 
     setIsRecommending(true);
     try {
+      const willHitMilestone = count + 1 >= 10 && count < 10;
       await recommend({ exhibitionId, submissionId: submission.id });
       setLocalHasLiked(true);
       setCount((c) => c + 1);
       setAnimating(true);
       setTimeout(() => setAnimating(false), 300);
       toast.success('交易已发送，请等待确认...');
+      if (willHitMilestone) {
+        triggerMilestone(submission.title, count + 1);
+      }
     } catch (err: any) {
       toast.error(err.message || '推荐失败，请重试');
     } finally {

@@ -6,8 +6,9 @@ import Layout from '@/components/Layout/Layout';
 import ExhibitionInfo from '@/components/Exhibition/ExhibitionInfo';
 import SubmissionList from '@/components/Submission/SubmissionList';
 import SubmitModal from '@/components/Submission/SubmitModal';
-import { useExhibition, useSubmissions, useSubmitToExhibition, parseExhibition, parseSubmissions } from '@/hooks/useContract';
+import { useExhibition, useSubmissions, useSubmitToExhibition, useHasSubmitted, parseExhibition, parseSubmissions } from '@/hooks/useContract';
 import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
+import { usePOAP } from '@/context/POAPContext';
 import { toast } from 'sonner';
 
 const ExhibitionDetailPage = () => {
@@ -19,6 +20,8 @@ const ExhibitionDetailPage = () => {
   const [contentLoading, setContentLoading] = useState(false);
 
   const { isConnected, address } = useAccount();
+  const { triggerFirstSubmission } = usePOAP();
+  const { data: hasSubmittedBefore } = useHasSubmitted(address || '');
   const { data: rawExhibition, isLoading: exhibitionLoading, error: exhibitionError, refetch: refetchExhibition } = useExhibition(exhibitionId);
   const { data: rawSubmissions, isLoading: submissionsLoading, refetch: refetchSubmissions } = useSubmissions(exhibitionId);
 
@@ -63,6 +66,9 @@ const ExhibitionDetailPage = () => {
   const { submitToExhibition } = useSubmitToExhibition(() => {
     toast.success('投稿已提交，等待策展人审核');
     refetchSubmissions();
+    if (!hasSubmittedBefore) {
+      triggerFirstSubmission();
+    }
   });
 
   const totalRecommends = submissions.reduce((sum, s) => sum + s.recommendCount, 0);
