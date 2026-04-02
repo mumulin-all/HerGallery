@@ -157,33 +157,33 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
         </div>
       )}
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 flex-col items-stretch gap-2">
         <button
           onClick={handleWitness}
           disabled={isWitnessing}
-          className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-2 text-sm transition-all ${
+          className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-all ${
             hasWitnessed
               ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
               : 'border-border text-muted-foreground hover:border-emerald-300 hover:text-emerald-600'
           }`}
         >
-          <span>{hasWitnessed ? '✓' : '◌'}</span>
-          <span className="text-xs font-medium">{witnessCount}</span>
+          <span className="font-medium">{hasWitnessed ? '已见证' : '我要见证'}</span>
+          <span className="text-xs font-semibold">{witnessCount}</span>
         </button>
 
         <button
           onClick={handleLike}
           disabled={isRecommending}
-          className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-2 text-sm transition-all ${
+          className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-all ${
             hasLiked
               ? 'border-primary/30 bg-primary/10 text-primary'
               : 'border-border text-muted-foreground hover:border-primary/30 hover:text-primary'
           }`}
         >
-          <span className={animating ? 'animate-heartbeat' : ''}>
-            {hasLiked ? '❤️' : '🤍'}
+          <span className={`font-medium ${animating ? 'animate-heartbeat' : ''}`}>
+            {hasLiked ? '已推荐' : '我要推荐'}
           </span>
-          <span className="text-xs font-medium">{count}</span>
+          <span className="text-xs font-semibold">{count}</span>
         </button>
       </div>
     </motion.div>
