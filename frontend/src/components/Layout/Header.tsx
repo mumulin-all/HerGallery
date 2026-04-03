@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { shortenAddress } from '@/lib/format';
 import { useHasSetUsername, useUsername } from '@/hooks/useContract';
 import UsernameModal from '@/components/ui/UsernameModal';
 
@@ -33,7 +32,7 @@ const Header = () => {
     }
   };
 
-  const displayName = isConnected && username ? username : (isConnected ? shortenAddress(address || '') : null);
+  const displayName = isConnected ? (username && username.trim() ? username.trim() : '云吃吃') : null;
 
   return (
     <>
@@ -74,21 +73,12 @@ const Header = () => {
 
             {isConnected ? (
               <div className="ml-4 flex items-center gap-2">
-                {!hasSetUsername ? (
-                  <button
-                    onClick={() => setShowUsernameModal(true)}
-                    className="flex h-9 items-center rounded-full border border-primary/30 bg-primary/10 px-4 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground cursor-pointer"
-                  >
-                    设置昵称
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowUsernameModal(true)}
-                    className="flex h-9 items-center rounded-full border border-border px-4 text-sm font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                  >
-                    {displayName}
-                  </button>
-                )}
+                <button
+                  onClick={() => setShowUsernameModal(true)}
+                  className="flex h-9 items-center rounded-full border border-border px-4 text-sm font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                >
+                  {displayName}
+                </button>
                 <button
                   onClick={handleWalletClick}
                   className="flex h-9 items-center rounded-full border border-border px-3 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors cursor-pointer"
