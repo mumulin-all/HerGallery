@@ -348,7 +348,7 @@ struct Submission {
     string title;
     string description;
     uint256 createdAt;
-    uint256 recommendCount;   // 推荐数
+    uint256 recommendCount;   // 托举数
     uint256 witnessCount;     // 见证数
     bool flagged;
 }

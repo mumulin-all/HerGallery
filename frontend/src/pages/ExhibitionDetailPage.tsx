@@ -115,7 +115,7 @@ const ExhibitionDetailPage = () => {
       <Layout>
         <div className="gallery-container py-24 text-center">
           <p className="text-destructive">加载失败，请检查网络和钱包连接</p>
-          <Link to="/" className="mt-4 inline-block text-sm text-primary hover:underline">
+          <Link to="/gallery" className="mt-4 inline-block text-sm text-primary hover:underline">
             返回首页
           </Link>
         </div>
@@ -126,7 +126,7 @@ const ExhibitionDetailPage = () => {
   return (
     <Layout>
       <div className="gallery-container">
-        <Link to="/" className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+        <Link to="/gallery" className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
           ← 返回展厅列表
         </Link>
 
