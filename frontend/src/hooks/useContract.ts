@@ -468,6 +468,40 @@ export function useTipExhibition(onSuccess?: () => void) {
   return { tipExhibition };
 }
 
+export function useTipPlatform(onSuccess?: () => void) {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  const tipPlatform = async (amountInAvax: string) => {
+    if (!walletClient || !address) {
+      throw new Error('Wallet not connected');
+    }
+
+    const normalizedAmount = amountInAvax.trim();
+    if (!normalizedAmount || Number(normalizedAmount) <= 0) {
+      throw new Error('打赏金额必须大于 0');
+    }
+
+    const hash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'tipPlatform',
+      args: [],
+      value: parseEther(normalizedAmount),
+      account: address,
+      chain: avalancheFuji,
+    });
+
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === 'success') {
+      onSuccess?.();
+    }
+    return hash;
+  };
+
+  return { tipPlatform };
+}
+
 export function parseExhibition(raw: any): Exhibition | null {
   if (!raw) return null;
   return {

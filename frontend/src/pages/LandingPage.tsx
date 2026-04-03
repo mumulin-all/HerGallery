@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '@/components/Layout/Header';
 import Footer from '@/components/Layout/Footer';
-import { fetchHomeExhibitions, type HomeExhibitionRecord } from '@/hooks/useContract';
+import { fetchHomeExhibitions, type HomeExhibitionRecord, useTipPlatform } from '@/hooks/useContract';
 import { getAllIPFSUrls } from '@/services/ipfs';
 import { shortenAddress } from '@/lib/format';
+import { useAccount } from 'wagmi';
+import { toast } from 'sonner';
 
 // ── Animated background orb ──────────────────────────────────────────────────
 
@@ -196,6 +198,86 @@ const TECH = [
   { icon: '🔗', name: 'Wagmi + Viem', desc: '类型安全的 Web3 交互层' },
   { icon: '🎨', name: 'Tailwind + Framer', desc: '流畅动效与精致视觉系统' },
 ];
+
+// ── Tip platform section ──────────────────────────────────────────────────────
+
+function TipPlatformSection() {
+  const { isConnected } = useAccount();
+  const [amount, setAmount] = useState('0.01');
+  const [isTipping, setIsTipping] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const { tipPlatform } = useTipPlatform(() => {
+    setDone(true);
+    toast.success('感谢你的支持！打赏已上链 ✦');
+    setTimeout(() => setDone(false), 4000);
+  });
+
+  const handleTip = async () => {
+    if (!isConnected) { toast.error('请先连接钱包'); return; }
+    const val = Number(amount);
+    if (!amount || val <= 0) { toast.error('请输入有效金额'); return; }
+    setIsTipping(true);
+    try {
+      await tipPlatform(amount);
+    } catch (err: any) {
+      toast.error(err.message || '打赏失败，请重试');
+    } finally {
+      setIsTipping(false);
+    }
+  };
+
+  return (
+    <section className="gallery-container pb-20 pt-4">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        className="mx-auto max-w-md rounded-3xl border border-violet-200/20 bg-gradient-to-br from-violet-950/40 via-purple-900/30 to-fuchsia-950/40 px-8 py-10 text-center"
+        style={{ boxShadow: '0 0 60px -20px rgba(124,58,237,0.25)' }}
+      >
+        <span className="text-3xl">✦</span>
+        <h3 className="mt-3 text-lg font-bold text-foreground">打赏平台</h3>
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+          HerGallery 由社区驱动，完全开源。<br />
+          如果这个项目对你有意义，欢迎用 AVAX 支持我们继续建设。
+        </p>
+
+        <div className="mt-6 flex items-center gap-2">
+          <div className="relative flex-1">
+            <input
+              type="number"
+              min="0.001"
+              step="0.001"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-4 py-2.5 pr-16 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+              AVAX
+            </span>
+          </div>
+          <button
+            onClick={handleTip}
+            disabled={isTipping || done}
+            className={`shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 ${
+              done
+                ? 'bg-violet-100 text-violet-700'
+                : 'bg-violet-600 text-white hover:bg-violet-500 hover:shadow-lg hover:shadow-violet-500/30'
+            }`}
+          >
+            {done ? '已打赏 ✦' : isTipping ? '处理中…' : '打赏'}
+          </button>
+        </div>
+
+        <p className="mt-3 text-xs text-muted-foreground/60">
+          链上转账，直接到达合约地址，完全透明可查
+        </p>
+      </motion.div>
+    </section>
+  );
+}
 
 // ── Landing page ──────────────────────────────────────────────────────────────
 
@@ -519,6 +601,9 @@ const LandingPage = () => {
             </div>
           </motion.div>
         </section>
+        {/* ── Tip platform ──────────────────────────────────────────────── */}
+        <TipPlatformSection />
+
       </div>
 
       <Footer />
