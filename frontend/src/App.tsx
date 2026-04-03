@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { config } from "@/config/wagmi";
 import { POAPProvider } from "@/context/POAPContext";
+import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
 import ExhibitionDetailPage from "./pages/ExhibitionDetailPage";
 import CreateExhibitionPage from "./pages/CreateExhibitionPage";
@@ -23,7 +24,8 @@ const App = () => (
         <POAPProvider>
         <BrowserRouter basename={routerBasename}>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/gallery" element={<HomePage />} />
             <Route path="/create" element={<CreateExhibitionPage />} />
             <Route path="/me" element={<MyRecordsPage />} />
             <Route path="/exhibition/:id" element={<ExhibitionDetailPage />} />

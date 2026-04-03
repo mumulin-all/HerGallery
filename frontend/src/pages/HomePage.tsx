@@ -3,9 +3,105 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout/Layout';
 import ExhibitionList from '@/components/Exhibition/ExhibitionList';
 import { fetchHomeExhibitions, type HomeExhibitionRecord } from '@/hooks/useContract';
+import { getAllIPFSUrls } from '@/services/ipfs';
 import { Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { relativeTime, shortenAddress } from '@/lib/format';
+
+const RANK_STYLES = [
+  { badge: 'bg-amber-100 text-amber-700 border border-amber-200', bar: 'bg-amber-400/20' },
+  { badge: 'bg-slate-100 text-slate-600 border border-slate-200', bar: 'bg-slate-300/20' },
+  { badge: 'bg-orange-100 text-orange-600 border border-orange-200', bar: 'bg-orange-300/20' },
+];
+
+function FeaturedTicket({ exhibition, rank }: { exhibition: HomeExhibitionRecord; rank: number }) {
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverIdx, setCoverIdx] = useState(0);
+  const urls = exhibition.coverHash ? getAllIPFSUrls(exhibition.coverHash) : [];
+  const style = RANK_STYLES[rank - 1] ?? RANK_STYLES[2];
+
+  useEffect(() => {
+    if (urls.length > 0) setCoverUrl(urls[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exhibition.coverHash]);
+
+  return (
+    <Link
+      to={`/exhibition/${exhibition.id}`}
+      className="group relative flex h-28 overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-lg"
+    >
+      {/* Subtle rank tint strip on left edge */}
+      <div className={`w-1 shrink-0 ${style.bar}`} />
+
+      {/* Left: text info */}
+      <div className="flex min-w-0 flex-1 flex-col justify-between px-5 py-4">
+        {/* Top row */}
+        <div className="flex items-center gap-2">
+          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.badge}`}>
+            TOP {rank}
+          </span>
+          {exhibition.tags.slice(0, 2).map((tag) => (
+            <span key={tag} className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
+              {tag}
+            </span>
+          ))}
+          <span className="ml-auto shrink-0 text-xs text-muted-foreground">{relativeTime(exhibition.createdAt)}</span>
+        </div>
+
+        {/* Title */}
+        <h3 className="mt-1 truncate text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+          {exhibition.title}
+        </h3>
+
+        {/* Bottom stats row */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span>{shortenAddress(exhibition.curator)}</span>
+          <span className="text-border">·</span>
+          <span>{exhibition.submissionCount} 投稿</span>
+          <span className="text-border">·</span>
+          <span>{exhibition.totalRecommends} 推荐</span>
+          <span className="text-border">·</span>
+          <span>{exhibition.totalWitnesses} 见证</span>
+        </div>
+      </div>
+
+      {/* Divider — ticket perforation style */}
+      <div className="relative flex w-5 shrink-0 flex-col items-center justify-between py-2">
+        <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 border-l border-dashed border-border" />
+        <div className="relative z-10 h-2.5 w-2.5 rounded-full bg-background border border-border -ml-[1px]" />
+        <div className="relative z-10 h-2.5 w-2.5 rounded-full bg-background border border-border -ml-[1px]" />
+      </div>
+
+      {/* Right: cover image */}
+      <div className="relative w-36 shrink-0 overflow-hidden bg-muted">
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            alt={exhibition.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={() => {
+              if (coverIdx < urls.length - 1) {
+                const next = coverIdx + 1;
+                setCoverIdx(next);
+                setCoverUrl(urls[next]);
+              } else {
+                setCoverUrl(null);
+              }
+            }}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground/30">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="m21 15-5-5L5 21" />
+            </svg>
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
 
 const HomePage = () => {
   const [exhibitions, setExhibitions] = useState<HomeExhibitionRecord[]>([]);
@@ -102,50 +198,9 @@ const HomePage = () => {
               </div>
 
               {featuredExhibitions.length > 0 ? (
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                <div className="flex flex-col gap-3">
                   {featuredExhibitions.map((exhibition, index) => (
-                    <Link
-                      key={exhibition.id}
-                      to={`/exhibition/${exhibition.id}`}
-                      className="group rounded-3xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
-                    >
-                      <div className="mb-4 flex items-center justify-between">
-                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                          TOP {index + 1}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{relativeTime(exhibition.createdAt)}</span>
-                      </div>
-                      <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {exhibition.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground">{shortenAddress(exhibition.curator)}</p>
-                      {exhibition.tags.length > 0 && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {exhibition.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded-full bg-secondary px-2.5 py-0.5 text-xs text-muted-foreground"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-                        <div className="rounded-2xl bg-background px-3 py-3">
-                          <p className="text-xs text-muted-foreground">投稿</p>
-                          <p className="mt-1 text-lg font-semibold text-foreground">{exhibition.submissionCount}</p>
-                        </div>
-                        <div className="rounded-2xl bg-background px-3 py-3">
-                          <p className="text-xs text-muted-foreground">推荐</p>
-                          <p className="mt-1 text-lg font-semibold text-foreground">{exhibition.totalRecommends}</p>
-                        </div>
-                        <div className="rounded-2xl bg-background px-3 py-3">
-                          <p className="text-xs text-muted-foreground">见证</p>
-                          <p className="mt-1 text-lg font-semibold text-foreground">{exhibition.totalWitnesses}</p>
-                        </div>
-                      </div>
-                    </Link>
+                    <FeaturedTicket key={exhibition.id} exhibition={exhibition} rank={index + 1} />
                   ))}
                 </div>
               ) : (

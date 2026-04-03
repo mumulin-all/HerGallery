@@ -139,7 +139,7 @@ const ManageExhibitionPage = () => {
       <Layout>
         <div className="gallery-container py-24 text-center">
           <p className="text-destructive">展厅加载失败</p>
-          <Link to="/" className="mt-4 inline-block text-sm text-primary hover:underline">
+          <Link to="/gallery" className="mt-4 inline-block text-sm text-primary hover:underline">
             返回首页
           </Link>
         </div>
