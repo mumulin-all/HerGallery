@@ -17,7 +17,7 @@ const Header = () => {
 
   useEffect(() => {
     if (!isLanding) { setScrolled(false); return; }
-    const onScroll = () => setScrolled(window.scrollY > 64);
+    const onScroll = () => setScrolled(window.scrollY > window.innerHeight - 80);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
