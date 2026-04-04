@@ -84,12 +84,13 @@ const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
 
           <div className="mb-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-lg">
-              {contentIcon}
-            </span>
-            <span className="text-sm font-medium text-primary">
-              {contentType}
-            </span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-lg">
+                {contentIcon}
+              </span>
+              <span className="text-sm font-medium text-primary">
+                {contentType}
+              </span>
+            </div>
           </div>
 
           <h2 className="text-xl font-bold text-foreground mb-2">{submission.title}</h2>
@@ -139,7 +140,7 @@ const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
               rel="noreferrer"
               className="text-xs text-primary hover:underline"
             >
-              在 Snowtrace 查看投稿者地址
+              在 Snowtrace 查看投稿人地址
             </a>
             {isCurator && (
               <button
