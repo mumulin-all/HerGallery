@@ -9,7 +9,6 @@ import { getAllIPFSUrls } from '@/services/ipfs';
 import { shortenAddress } from '@/lib/format';
 import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
-import LogoNobgSvgUrl from '@/assert/hg-logo-nobg.svg?url';
 
 // ── Animated background orb ──────────────────────────────────────────────────
 
@@ -354,20 +353,6 @@ const LandingPage = () => {
         {/* content — pt-16 pushes below the transparent header */}
         <div className="flex min-h-screen flex-col items-center justify-center pt-16">
         <div className="relative z-10 max-w-3xl w-full px-8 text-center">
-          {/* Logo above title */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="flex justify-center mb-6"
-          >
-            <img
-              src={LogoNobgSvgUrl}
-              alt="HerGallery"
-              className="w-40 h-40 object-contain"
-            />
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -413,17 +398,17 @@ const LandingPage = () => {
             <Link
               to="/gallery"
               className="rounded-full bg-white px-8 py-3 text-sm font-semibold text-purple-900 shadow-lg transition-all hover:bg-violet-100 hover:shadow-violet-500/30 hover:shadow-xl"
-              >
-                进入展厅 →
-              </Link>
-              <a
-                href="#features"
-                className="rounded-full border border-white/25 px-8 py-3 text-sm font-semibold text-white/80 transition-all hover:border-white/50 hover:text-white"
-              >
-                了解更多
-              </a>
-            </motion.div>
-          </div>
+            >
+              进入展厅 →
+            </Link>
+            <a
+              href="#features"
+              className="rounded-full border border-white/25 px-8 py-3 text-sm font-semibold text-white/80 transition-all hover:border-white/50 hover:text-white"
+            >
+              了解更多
+            </a>
+          </motion.div>
+        </div>
         </div>{/* end centering wrapper */}
 
         {/* scroll hint */}
