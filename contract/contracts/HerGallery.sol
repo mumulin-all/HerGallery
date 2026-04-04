@@ -112,7 +112,7 @@ contract HerGallery is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         string[] memory tags
     ) external payable {
         require(bytes(title).length > 0 && bytes(title).length <= 200, "Invalid title length");
-        require(bytes(content).length > 0 && bytes(content).length <= 5000, "Content required");
+        require(bytes(content).length > 0 && bytes(content).length <= 15000, "Content required");
         require(msg.value >= CREATION_FEE, "Insufficient creation fee");
         require(tags.length <= 3, "Too many tags");
 
@@ -157,9 +157,9 @@ contract HerGallery is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         Exhibition storage exhibition = exhibitions[exhibitionId];
         require(!exhibition.flagged, "Exhibition flagged");
         require(_isValidContentType(contentType), "Invalid content type");
-        require(bytes(content).length > 0 && bytes(content).length <= 5000, "Content required");
-        require(bytes(title).length > 0 && bytes(title).length <= 100, "Invalid title length");
-        require(bytes(description).length <= 500, "Description too long");
+        require(bytes(content).length > 0 && bytes(content).length <= 10000, "Content required");
+        require(bytes(title).length > 0 && bytes(title).length <= 300, "Invalid title length");
+        require(bytes(description).length <= 1500, "Description too long");
 
         uint256 submissionId = submissions.length;
         submissions.push(

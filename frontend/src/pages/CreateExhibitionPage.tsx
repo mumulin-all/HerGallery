@@ -84,6 +84,10 @@ const CreateExhibitionPage = () => {
       toast.error('请输入主题介绍');
       return;
     }
+    if (content.length > 5000) {
+      toast.error('主题介绍不能超过 5000 字');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -213,7 +217,12 @@ const CreateExhibitionPage = () => {
           {/* Markdown Editor */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-foreground">主题介绍</label>
+              <label className="text-sm font-medium text-foreground">
+                主题介绍
+                <span className={`ml-2 text-xs font-normal ${content.length > 5000 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {content.length} / 5000 字
+                </span>
+              </label>
               <div className="flex rounded-lg border border-border overflow-hidden text-xs">
                 <button
                   onClick={() => setPreviewMode(false)}
@@ -240,7 +249,11 @@ const CreateExhibitionPage = () => {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="使用 Markdown 格式编写展厅主题介绍..."
                 rows={10}
-                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all resize-none font-mono"
+                className={`w-full rounded-xl border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 transition-all resize-none font-mono ${
+                  content.length > 5000
+                    ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
+                    : 'border-input focus:border-primary focus:ring-primary/20'
+                }`}
               />
             ) : (
               <div className="min-h-[240px] rounded-xl border border-border bg-card p-4 text-sm text-foreground leading-relaxed">
