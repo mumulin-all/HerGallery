@@ -10,6 +10,7 @@ import { useExhibition, useSubmissions, useSubmitToExhibition, useHasSubmitted, 
 import { getAllIPFSUrls } from '@/services/ipfs';
 import { usePOAP } from '@/context/POAPContext';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
 const ExhibitionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -143,7 +144,9 @@ const ExhibitionDetailPage = () => {
             {/* Content */}
             <div className="prose prose-sm max-w-none mb-8 rounded-xl bg-card border border-border p-6">
               {exhibition.content ? (
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{exhibition.content}</p>
+                <div className="text-muted-foreground leading-relaxed">
+                  <ReactMarkdown>{exhibition.content}</ReactMarkdown>
+                </div>
               ) : (
                 <p className="text-muted-foreground leading-relaxed">
                   这是展厅的主题介绍区域。

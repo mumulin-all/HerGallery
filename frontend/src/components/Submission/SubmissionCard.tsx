@@ -7,6 +7,7 @@ import { getAllIPFSUrls } from '@/services/ipfs';
 import DisplayName from '@/components/ui/DisplayName';
 import { usePOAP } from '@/context/POAPContext';
 import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
 interface Props {
   submission: Submission;
@@ -105,9 +106,9 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
             {contentType}
           </span>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-          {submission.description}
-        </p>
+        <div className="mt-1 text-sm text-muted-foreground line-clamp-2">
+          <ReactMarkdown>{submission.description}</ReactMarkdown>
+        </div>
         <p className="mt-2 text-xs text-muted-foreground/70">
           <DisplayName address={submission.creator} />
         </p>

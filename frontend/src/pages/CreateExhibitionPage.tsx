@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useCreateExhibition, useCreationFee, useHasCreatedExhibition } from '@/hooks/useContract';
 import { uploadFileToIPFS } from '@/services/ipfs';
 import { usePOAP } from '@/context/POAPContext';
+import ReactMarkdown from 'react-markdown';
 
 const CreateExhibitionPage = () => {
   const navigate = useNavigate();
@@ -243,7 +244,13 @@ const CreateExhibitionPage = () => {
               />
             ) : (
               <div className="min-h-[240px] rounded-xl border border-border bg-card p-4 text-sm text-foreground leading-relaxed">
-                {content || <span className="text-muted-foreground">暂无内容</span>}
+                {content ? (
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown>{content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">暂无内容</span>
+                )}
               </div>
             )}
           </div>
