@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AVALANCHE_FUJI, CONTENT_TYPE_LABELS, Submission } from '@/config/contract';
 import DisplayName from '@/components/ui/DisplayName';
 import { relativeTime } from '@/lib/format';
-import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
-import { buildSubmissionShareUrl, copyTextToClipboard } from '@/lib/utils';
+import { getAllIPFSUrls } from '@/services/ipfs';
 import { useFlagSubmission } from '@/hooks/useContract';
 import { toast } from 'sonner';
 
@@ -16,12 +15,14 @@ interface Props {
   onClose: () => void;
 }
 
+interface SubmissionContent {
+  text: string;
+  link: string;
+  imageHash: string;
+}
+
 const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
   const [currentGateway, setCurrentGateway] = useState(0);
-  const [payloadText, setPayloadText] = useState('');
-  const [payloadLink, setPayloadLink] = useState('');
-  const [imageHash, setImageHash] = useState('');
-  const [isCopying, setIsCopying] = useState(false);
   const [isFlagging, setIsFlagging] = useState(false);
 
   const { flagSubmission } = useFlagSubmission(() => {
@@ -29,50 +30,20 @@ const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
     onClose();
   });
 
+  // Parse content from contract (stored as JSON string)
+  let parsedContent: SubmissionContent = { text: '', link: '', imageHash: '' };
+  try {
+    parsedContent = JSON.parse(submission.content || '{}');
+  } catch {}
+
   const contentType = CONTENT_TYPE_LABELS[submission.contentType] || submission.contentType;
   const contentIcon = submission.contentType === 'creation' ? '🎨' : '🧾';
-  const ipfsUrls = imageHash ? getAllIPFSUrls(imageHash) : [];
+  const ipfsUrls = parsedContent.imageHash ? getAllIPFSUrls(parsedContent.imageHash) : [];
   const imageUrl = ipfsUrls[currentGateway] || null;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getFromIPFS(submission.contentHash)
-      .then((payload) => {
-        if (!cancelled) {
-          setPayloadText(payload.text || '');
-          setPayloadLink(payload.link || '');
-          setImageHash(payload.imageHash || '');
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setPayloadText('');
-          setPayloadLink('');
-          setImageHash('');
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [submission.contentHash]);
 
   const handleImageError = () => {
     if (currentGateway < ipfsUrls.length - 1) {
       setCurrentGateway(prev => prev + 1);
-    }
-  };
-
-  const handleShare = async () => {
-    setIsCopying(true);
-    try {
-      await copyTextToClipboard(buildSubmissionShareUrl(submission.exhibitionId, submission.id));
-      toast.success('投稿链接已复制');
-    } catch (err: any) {
-      toast.error(err.message || '复制链接失败');
-    } finally {
-      setIsCopying(false);
     }
   };
 
@@ -119,28 +90,20 @@ const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
             <span className="text-sm font-medium text-primary">
               {contentType}
             </span>
-            </div>
-            <button
-              onClick={handleShare}
-              disabled={isCopying}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
-            >
-              {isCopying ? '复制中...' : '复制链接'}
-            </button>
           </div>
 
           <h2 className="text-xl font-bold text-foreground mb-2">{submission.title}</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             {submission.description}
           </p>
-          {payloadText && (
+          {parsedContent.text && (
             <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap mb-4">
-              {payloadText}
+              {parsedContent.text}
             </p>
           )}
-          {payloadLink && (
+          {parsedContent.link && (
             <a
-              href={payloadLink}
+              href={parsedContent.link}
               target="_blank"
               rel="noreferrer"
               className="mb-4 inline-flex text-sm text-primary hover:underline"

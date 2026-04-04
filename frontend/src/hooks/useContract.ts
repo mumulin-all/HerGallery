@@ -28,6 +28,7 @@ export interface HomeExhibitionRecord extends Exhibition {
   totalRecommends: number;
   totalWitnesses: number;
   hotScore: number;
+  recentSubmissions: Submission[];
 }
 
 export function useExhibitions() {
@@ -161,7 +162,7 @@ export function useCreateExhibition(onSuccess?: () => void) {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
 
-  const createExhibition = async (args: { title: string; contentHash: string; coverHash: string; tags: string[] }) => {
+  const createExhibition = async (args: { title: string; content: string; coverHash: string; tags: string[] }) => {
     if (!walletClient || !address) {
       throw new Error('Wallet not connected');
     }
@@ -170,7 +171,7 @@ export function useCreateExhibition(onSuccess?: () => void) {
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'createExhibition',
-      args: [args.title, args.contentHash, args.coverHash, args.tags],
+      args: [args.title, args.content, args.coverHash, args.tags],
       value: BigInt('1000000000000000'), // 0.001 AVAX
       account: address,
       chain: avalancheFuji,
@@ -193,7 +194,7 @@ export function useSubmitToExhibition(onSuccess?: () => void) {
   const submitToExhibition = async (args: {
     exhibitionId: number;
     contentType: string;
-    contentHash: string;
+    content: string;
     title: string;
     description: string;
   }) => {
@@ -208,7 +209,7 @@ export function useSubmitToExhibition(onSuccess?: () => void) {
       args: [
         BigInt(args.exhibitionId),
         args.contentType,
-        args.contentHash,
+        args.content,
         args.title,
         args.description,
       ],
@@ -508,7 +509,7 @@ export function parseExhibition(raw: any): Exhibition | null {
     id: Number(raw.id),
     curator: raw.curator,
     title: raw.title,
-    contentHash: raw.contentHash,
+    content: raw.content,
     coverHash: raw.coverHash,
     tags: Array.isArray(raw.tags) ? raw.tags : [],
     createdAt: Number(raw.createdAt),
@@ -532,7 +533,7 @@ export function parseSubmission(raw: any): Submission | null {
     creator: raw.creator,
     contentType: raw.contentType,
     status: Number(raw.status),
-    contentHash: raw.contentHash,
+    content: raw.content,
     title: raw.title,
     description: raw.description,
     recommendCount: Number(raw.recommendCount),
@@ -629,6 +630,7 @@ export async function fetchHomeExhibitions(): Promise<HomeExhibitionRecord[]> {
       const submissions = parseSubmissions(rawSubmissions).filter(
         (submission) => submission.status === 1 && !submission.flagged
       );
+      const recentSubmissions = submissions.slice(0, 3);
       const totalRecommends = submissions.reduce((sum, submission) => sum + submission.recommendCount, 0);
       const totalWitnesses = submissions.reduce((sum, submission) => sum + submission.witnessCount, 0);
 
@@ -637,6 +639,7 @@ export async function fetchHomeExhibitions(): Promise<HomeExhibitionRecord[]> {
         totalRecommends,
         totalWitnesses,
         hotScore: totalRecommends * 0.7 + exhibition.submissionCount * 0.3,
+        recentSubmissions,
       };
     })
   );

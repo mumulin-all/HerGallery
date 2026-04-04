@@ -12,7 +12,7 @@ contract HerGallery {
         uint256 id;
         address curator;
         string title;
-        string contentHash;
+        string content;
         string coverHash;
         string[] tags;
         uint256 createdAt;
@@ -28,7 +28,7 @@ contract HerGallery {
         address creator;
         string contentType;
         SubmissionStatus status;
-        string contentHash;
+        string content;
         string title;
         string description;
         uint256 createdAt;
@@ -100,12 +100,12 @@ contract HerGallery {
 
     function createExhibition(
         string memory title,
-        string memory contentHash,
+        string memory content,
         string memory coverHash,
         string[] memory tags
     ) external payable {
-        require(bytes(title).length > 0 && bytes(title).length <= 50, "Invalid title length");
-        require(bytes(contentHash).length > 0, "Content hash required");
+        require(bytes(title).length > 0 && bytes(title).length <= 200, "Invalid title length");
+        require(bytes(content).length > 0 && bytes(content).length <= 5000, "Content required");
         require(msg.value >= CREATION_FEE, "Insufficient creation fee");
         require(tags.length <= 3, "Too many tags");
 
@@ -116,7 +116,7 @@ contract HerGallery {
         exhibition.id = exhibitionId;
         exhibition.curator = msg.sender;
         exhibition.title = title;
-        exhibition.contentHash = contentHash;
+        exhibition.content = content;
         exhibition.coverHash = coverHash;
         exhibition.createdAt = block.timestamp;
 
@@ -138,15 +138,16 @@ contract HerGallery {
     function submitToExhibition(
         uint256 exhibitionId,
         string memory contentType,
-        string memory contentHash,
+        string memory content,
         string memory title,
         string memory description
     ) external exhibitionExists(exhibitionId) {
         Exhibition storage exhibition = exhibitions[exhibitionId];
         require(!exhibition.flagged, "Exhibition flagged");
         require(_isValidContentType(contentType), "Invalid content type");
-        require(bytes(contentHash).length > 0, "Content hash required");
-        require(bytes(title).length > 0 && bytes(title).length <= 50, "Invalid title length");
+        require(bytes(content).length > 0 && bytes(content).length <= 5000, "Content required");
+        require(bytes(title).length > 0 && bytes(title).length <= 100, "Invalid title length");
+        require(bytes(description).length <= 500, "Description too long");
 
         uint256 submissionId = submissions.length;
         submissions.push(
@@ -156,7 +157,7 @@ contract HerGallery {
                 creator: msg.sender,
                 contentType: contentType,
                 status: SubmissionStatus.PENDING,
-                contentHash: contentHash,
+                content: content,
                 title: title,
                 description: description,
                 createdAt: block.timestamp,

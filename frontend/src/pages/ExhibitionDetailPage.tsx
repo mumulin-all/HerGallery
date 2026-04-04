@@ -7,7 +7,7 @@ import ExhibitionInfo from '@/components/Exhibition/ExhibitionInfo';
 import SubmissionList from '@/components/Submission/SubmissionList';
 import SubmitModal from '@/components/Submission/SubmitModal';
 import { useExhibition, useSubmissions, useSubmitToExhibition, useHasSubmitted, parseExhibition, parseSubmissions } from '@/hooks/useContract';
-import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
+import { getAllIPFSUrls } from '@/services/ipfs';
 import { usePOAP } from '@/context/POAPContext';
 import { toast } from 'sonner';
 
@@ -16,8 +16,6 @@ const ExhibitionDetailPage = () => {
   const exhibitionId = Number(id);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const [content, setContent] = useState<string | null>(null);
-  const [contentLoading, setContentLoading] = useState(false);
 
   const { isConnected, address } = useAccount();
   const { triggerFirstSubmission } = usePOAP();
@@ -40,19 +38,6 @@ const ExhibitionDetailPage = () => {
     }
   }, [exhibition?.coverHash]);
 
-  // Load content from IPFS when exhibition changes
-  useEffect(() => {
-    if (exhibition?.contentHash) {
-      setContentLoading(true);
-      getFromIPFS(exhibition.contentHash)
-        .then((data) => setContent(data.markdown || data.content || data.description || null))
-        .catch(() => setContent(null))
-        .finally(() => setContentLoading(false));
-    } else {
-      setContent(null);
-    }
-  }, [exhibition?.contentHash]);
-
   const handleCoverError = () => {
     if (exhibition?.coverHash) {
       const urls = getAllIPFSUrls(exhibition.coverHash);
@@ -74,7 +59,7 @@ const ExhibitionDetailPage = () => {
   const totalRecommends = submissions.reduce((sum, s) => sum + s.recommendCount, 0);
   const totalWitnesses = submissions.reduce((sum, s) => sum + s.witnessCount, 0);
 
-  const handleSubmit = async (data: { contentType: string; contentHash: string; title: string; description: string }) => {
+  const handleSubmit = async (data: { contentType: string; content: string; title: string; description: string }) => {
     if (!isConnected) {
       toast.error('请先连接钱包');
       return;
@@ -90,7 +75,7 @@ const ExhibitionDetailPage = () => {
       await submitToExhibition({
         exhibitionId,
         contentType: data.contentType,
-        contentHash: data.contentHash,
+        content: data.content,
         title: data.title,
         description: data.description,
       });
@@ -116,7 +101,7 @@ const ExhibitionDetailPage = () => {
         <div className="gallery-container py-24 text-center">
           <p className="text-destructive">加载失败，请检查网络和钱包连接</p>
           <Link to="/gallery" className="mt-4 inline-block text-sm text-primary hover:underline">
-            返回首页
+            返回展厅列表
           </Link>
         </div>
       </Layout>
@@ -157,16 +142,11 @@ const ExhibitionDetailPage = () => {
 
             {/* Content */}
             <div className="prose prose-sm max-w-none mb-8 rounded-xl bg-card border border-border p-6">
-              {contentLoading ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : content ? (
-                <p className="text-muted-foreground leading-relaxed">{content}</p>
+              {exhibition.content ? (
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{exhibition.content}</p>
               ) : (
                 <p className="text-muted-foreground leading-relaxed">
-                  这是展厅的主题介绍区域。策展人可以使用 Markdown 格式编写丰富的内容，包括图片、标题、段落和列表。
-                  内容通过 IPFS 存储和加载。
+                  这是展厅的主题介绍区域。
                 </p>
               )}
             </div>
@@ -217,6 +197,7 @@ const ExhibitionDetailPage = () => {
                 exhibition={exhibition}
                 totalRecommends={totalRecommends}
                 totalWitnesses={totalWitnesses}
+                firstSubmissionId={submissions.find(s => s.status === 1)?.id}
                 onTipSuccess={() => {
                   refetchExhibition();
                 }}

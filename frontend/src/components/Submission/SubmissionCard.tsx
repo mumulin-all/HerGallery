@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { CONTENT_TYPE_LABELS, Submission } from '@/config/contract';
-import { useRecommend, useHasRecommended, useHasWitnessed, useWitness } from '@/hooks/useContract';
-import { getAllIPFSUrls, getFromIPFS } from '@/services/ipfs';
+import { useRecommend, useHasRecommended } from '@/hooks/useContract';
+import { getAllIPFSUrls } from '@/services/ipfs';
 import DisplayName from '@/components/ui/DisplayName';
 import { usePOAP } from '@/context/POAPContext';
 import { toast } from 'sonner';
@@ -16,55 +16,38 @@ interface Props {
   onViewDetail: (submission: Submission) => void;
 }
 
+interface SubmissionContent {
+  text: string;
+  link: string;
+  imageHash: string;
+}
+
 const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetail }: Props) => {
   const { address, isConnected } = useAccount();
   const { triggerMilestone } = usePOAP();
   const [isRecommending, setIsRecommending] = useState(false);
-  const [isWitnessing, setIsWitnessing] = useState(false);
   const [localHasLiked, setLocalHasLiked] = useState(false);
-  const [localHasWitnessed, setLocalHasWitnessed] = useState(false);
   const [count, setCount] = useState(submission.recommendCount);
-  const [witnessCount, setWitnessCount] = useState(submission.witnessCount);
   const [animating, setAnimating] = useState(false);
   const [currentGateway, setCurrentGateway] = useState(0);
-  const [imageHash, setImageHash] = useState('');
 
   const { data: hasRecommendedFromChain } = useHasRecommended(submission.id, address || '');
-  const { data: hasWitnessedFromChain } = useHasWitnessed(submission.id, address || '');
   const hasLiked = hasRecommendedFromChain || localHasLiked;
-  const hasWitnessed = hasWitnessedFromChain || localHasWitnessed;
 
   const { recommend } = useRecommend(() => {
-    toast.success('推荐成功！');
+    toast.success('托举成功！');
   });
-  const { witness } = useWitness(() => {
-    toast.success('见证成功！');
-  });
+
+  // Parse content from contract (stored as JSON string)
+  let parsedContent: SubmissionContent = { text: '', link: '', imageHash: '' };
+  try {
+    parsedContent = JSON.parse(submission.content || '{}');
+  } catch {}
 
   const contentType = CONTENT_TYPE_LABELS[submission.contentType] || submission.contentType;
   const contentIcon = submission.contentType === 'creation' ? '🎨' : '🧾';
-  const ipfsUrls = imageHash ? getAllIPFSUrls(imageHash) : [];
+  const ipfsUrls = parsedContent.imageHash ? getAllIPFSUrls(parsedContent.imageHash) : [];
   const imageUrl = ipfsUrls[currentGateway] || null;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getFromIPFS(submission.contentHash)
-      .then((payload) => {
-        if (!cancelled) {
-          setImageHash(payload.imageHash || '');
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setImageHash('');
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [submission.contentHash]);
 
   const handleImageError = () => {
     if (currentGateway < ipfsUrls.length - 1) {
@@ -93,30 +76,9 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
         triggerMilestone(submission.title, count + 1);
       }
     } catch (err: any) {
-      toast.error(err.message || '推荐失败，请重试');
+      toast.error(err.message || '托举失败，请重试');
     } finally {
       setIsRecommending(false);
-    }
-  };
-
-  const handleWitness = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!isConnected) {
-      toast.error('请先连接钱包');
-      return;
-    }
-    if (hasWitnessed) return;
-
-    setIsWitnessing(true);
-    try {
-      await witness(submission.id);
-      setLocalHasWitnessed(true);
-      setWitnessCount((current) => current + 1);
-      toast.success('交易已发送，请等待确认...');
-    } catch (err: any) {
-      toast.error(err.message || '见证失败，请重试');
-    } finally {
-      setIsWitnessing(false);
     }
   };
 
@@ -165,19 +127,6 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
 
       <div className="flex shrink-0 flex-col items-stretch gap-2">
         <button
-          onClick={handleWitness}
-          disabled={isWitnessing}
-          className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-all ${
-            hasWitnessed
-              ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-              : 'border-border text-muted-foreground hover:border-emerald-300 hover:text-emerald-600'
-          }`}
-        >
-          <span className="font-medium">{hasWitnessed ? '已见证' : '我要见证'}</span>
-          <span className="text-xs font-semibold">{witnessCount}</span>
-        </button>
-
-        <button
           onClick={handleLike}
           disabled={isRecommending}
           className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition-all ${
@@ -187,7 +136,7 @@ const SubmissionCard = ({ submission, index, exhibitionId, isActive, onViewDetai
           }`}
         >
           <span className={`font-medium ${animating ? 'animate-heartbeat' : ''}`}>
-            {hasLiked ? '已推荐' : '我要推荐'}
+            {hasLiked ? '已托举' : '我要托举'}
           </span>
           <span className="text-xs font-semibold">{count}</span>
         </button>

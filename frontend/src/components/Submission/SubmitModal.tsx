@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { uploadFileToIPFS, uploadToIPFS } from '@/services/ipfs';
+import { uploadFileToIPFS } from '@/services/ipfs';
 
 const CONTENT_TYPES = [
   { value: 'evidence', label: '存证', icon: '🧾' },
@@ -13,7 +13,7 @@ interface Props {
   exhibitionId: number;
   onClose: () => void;
   onSuccess: () => void;
-  onSubmit: (data: { contentType: string; contentHash: string; title: string; description: string }) => void;
+  onSubmit: (data: { contentType: string; content: string; title: string; description: string }) => void;
   isLoading: boolean;
 }
 
@@ -52,23 +52,26 @@ const SubmitModal = ({ exhibitionId, onClose, onSubmit, isLoading }: Props) => {
     }
 
     setIsUploading(true);
-    toast.info('正在上传到 IPFS...');
+    if (imageFile) {
+      toast.info('正在上传图片到 IPFS...');
+    }
 
     try {
       const imageHash = imageFile ? await uploadFileToIPFS(imageFile) : '';
-      const payload = {
-        type: contentType,
-        text: textContent.trim() || undefined,
-        imageHash: imageHash || undefined,
-        link: link.trim() || undefined,
-      };
 
-      const finalContentHash = await uploadToIPFS(payload);
+      // Store content as JSON string on-chain (only image is on IPFS)
+      const content = JSON.stringify({
+        text: textContent.trim() || '',
+        link: link.trim() || '',
+        imageHash: imageHash || '',
+      });
 
-      toast.success('上传成功！');
+      if (imageFile) {
+        toast.success('上传成功！');
+      }
       onSubmit({
         contentType,
-        contentHash: finalContentHash,
+        content,
         title: title.trim(),
         description: description.trim(),
       });

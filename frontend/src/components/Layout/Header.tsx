@@ -11,19 +11,8 @@ const Header = () => {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const [showUsernameModal, setShowUsernameModal] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  const isLanding = location.pathname === '/';
-
-  useEffect(() => {
-    if (!isLanding) { setScrolled(false); return; }
-    const onScroll = () => setScrolled(window.scrollY > window.innerHeight - 80);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [isLanding]);
-
-  const transparent = isLanding && !scrolled;
+  const isHome = location.pathname === '/';
 
   const { data: hasSetUsername, refetch: refetchHasSetUsername } = useHasSetUsername(address || '');
   const { data: username, refetch: refetchUsername } = useUsername(address || '');
@@ -50,18 +39,18 @@ const Header = () => {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          transparent
-            ? 'border-b border-transparent bg-transparent'
-            : 'border-b border-border bg-card/80 backdrop-blur-md'
+        className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+          isHome
+            ? 'bg-gradient-to-r from-violet-900/90 via-purple-900/80 to-fuchsia-900/80 backdrop-blur-md border-white/10'
+            : 'bg-background/80 backdrop-blur-md border-border'
         }`}
       >
         <div className="gallery-container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <span className={`text-xl font-bold transition-colors ${transparent ? 'text-violet-300' : 'text-primary'}`}>
+            <span className={`text-xl font-bold ${isHome ? 'text-violet-300' : 'text-foreground'}`}>
               ✿
             </span>
-            <span className={`text-lg font-semibold tracking-tight transition-colors ${transparent ? 'text-white' : 'text-foreground'}`}>
+            <span className={`text-lg font-semibold tracking-tight ${isHome ? 'text-white' : 'text-foreground'}`}>
               HerGallery
             </span>
           </Link>
@@ -76,8 +65,8 @@ const Header = () => {
                 <span
                   className={
                     location.pathname === item.path
-                      ? transparent ? 'text-violet-300' : 'text-primary'
-                      : transparent
+                      ? isHome ? 'text-violet-200' : 'text-foreground'
+                      : isHome
                         ? 'text-white/70 hover:text-white'
                         : 'text-muted-foreground hover:text-foreground'
                   }
@@ -87,7 +76,7 @@ const Header = () => {
                 {location.pathname === item.path && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full ${transparent ? 'bg-violet-400' : 'bg-primary'}`}
+                    className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full ${isHome ? 'bg-violet-400' : 'bg-foreground'}`}
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -99,7 +88,7 @@ const Header = () => {
                 <button
                   onClick={() => setShowUsernameModal(true)}
                   className={`flex h-9 items-center rounded-full border px-4 text-sm font-medium transition-colors cursor-pointer ${
-                    transparent
+                    isHome
                       ? 'border-white/25 text-white hover:bg-white/10'
                       : 'border-border text-foreground hover:bg-secondary'
                   }`}
@@ -109,7 +98,7 @@ const Header = () => {
                 <button
                   onClick={handleWalletClick}
                   className={`flex h-9 items-center rounded-full border px-3 text-sm font-medium transition-colors cursor-pointer ${
-                    transparent
+                    isHome
                       ? 'border-white/20 text-white/60 hover:bg-white/10'
                       : 'border-border text-muted-foreground hover:bg-secondary'
                   }`}
@@ -122,9 +111,9 @@ const Header = () => {
               <button
                 onClick={handleWalletClick}
                 className={`ml-4 flex h-9 items-center rounded-full border px-4 text-sm font-medium transition-colors cursor-pointer ${
-                  transparent
+                  isHome
                     ? 'border-white/30 text-white hover:bg-white/15'
-                    : 'border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground'
+                    : 'border-border text-foreground hover:bg-secondary'
                 }`}
               >
                 连接钱包

@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import { AVALANCHE_FUJI, CONTRACT_ADDRESS, Exhibition } from '@/config/contract';
 import { formatDate } from '@/lib/format';
 import DisplayName from '@/components/ui/DisplayName';
-import { useTipExhibition, useContractOwner, useFlagExhibition } from '@/hooks/useContract';
+import { useTipExhibition, useContractOwner, useFlagExhibition, useWitness } from '@/hooks/useContract';
 import { toast } from 'sonner';
 import { buildExhibitionShareUrl, copyTextToClipboard } from '@/lib/utils';
 
@@ -11,15 +11,17 @@ interface Props {
   exhibition: Exhibition;
   totalRecommends: number;
   totalWitnesses: number;
+  firstSubmissionId?: number;
   onTipSuccess?: () => void;
 }
 
-const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSuccess }: Props) => {
+const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, firstSubmissionId, onTipSuccess }: Props) => {
   const { isConnected, address } = useAccount();
   const [tipAmount, setTipAmount] = useState('0.01');
   const [isTipping, setIsTipping] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isFlagging, setIsFlagging] = useState(false);
+  const [isHeating, setIsHeating] = useState(false);
 
   const { data: ownerAddress } = useContractOwner();
   const isOwner = !!address && !!ownerAddress && address.toLowerCase() === (ownerAddress as string).toLowerCase();
@@ -33,6 +35,31 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
     toast.success('已成功打赏展厅');
     onTipSuccess?.();
   });
+
+  const { witness } = useWitness(() => {
+    toast.success('热度 +1');
+    onTipSuccess?.();
+  });
+
+  const handleAddHeat = async () => {
+    if (!isConnected) {
+      toast.error('请先连接钱包');
+      return;
+    }
+    if (firstSubmissionId === undefined) {
+      toast.error('暂无稿件');
+      return;
+    }
+
+    setIsHeating(true);
+    try {
+      await witness(firstSubmissionId);
+    } catch (err: any) {
+      toast.error(err.message || '增加热度失败，请重试');
+    } finally {
+      setIsHeating(false);
+    }
+  };
 
   const handleTip = async () => {
     if (!isConnected) {
@@ -109,9 +136,16 @@ const ExhibitionInfo = ({ exhibition, totalRecommends, totalWitnesses, onTipSucc
         <span className="font-semibold text-primary">{totalRecommends}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-muted-foreground">总见证数</span>
+        <span className="text-muted-foreground">展厅热度</span>
         <span className="font-semibold text-primary">{totalWitnesses}</span>
       </div>
+      <button
+        onClick={handleAddHeat}
+        disabled={isHeating || firstSubmissionId === undefined}
+        className="w-full rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+      >
+        {isHeating ? '处理中...' : '增加热度'}
+      </button>
       <div className="flex justify-between">
         <span className="text-muted-foreground">赏金池</span>
         <span

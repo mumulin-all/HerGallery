@@ -5,7 +5,7 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout/Layout';
 import { toast } from 'sonner';
 import { useCreateExhibition, useCreationFee } from '@/hooks/useContract';
-import { uploadFileToIPFS, uploadToIPFS } from '@/services/ipfs';
+import { uploadFileToIPFS } from '@/services/ipfs';
 
 const CreateExhibitionPage = () => {
   const navigate = useNavigate();
@@ -20,10 +20,17 @@ const CreateExhibitionPage = () => {
   const [content, setContent] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [tagsInput, setTagsInput] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [previewMode, setPreviewMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  const AVAILABLE_TAGS = [
+    '云吃吃们',
+    '她会创作',
+    '她的声音',
+    '你也会觉得有趣吧',
+  ];
 
   const creationFee = fee ? Number(fee) / 1e18 : 0.001;
 
@@ -61,21 +68,10 @@ const CreateExhibitionPage = () => {
     setIsSubmitting(true);
 
     try {
-      const tags = tagsInput
-        .split(/[，,]/)
-        .map((tag) => tag.trim())
-        .filter(Boolean)
-        .slice(0, 3);
+      const tags = selectedTags.slice(0, 3);
       let coverHash = '';
-      let contentHash = '';
 
-      // Upload cover to IPFS if present
       setIsUploading(true);
-      toast.info('正在上传展厅内容到 IPFS...');
-
-      contentHash = await uploadToIPFS({
-        markdown: content.trim(),
-      });
 
       if (coverFile) {
         toast.info('正在上传封面到 IPFS...');
@@ -94,7 +90,7 @@ const CreateExhibitionPage = () => {
 
       await createExhibition({
         title: title.trim(),
-        contentHash,
+        content: content.trim(),
         coverHash,
         tags,
       });
@@ -163,14 +159,35 @@ const CreateExhibitionPage = () => {
 
           <div className="mb-6">
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              标签 <span className="text-xs text-muted-foreground">最多 3 个，用逗号分隔</span>
+              标签 <span className="text-xs text-muted-foreground">最多 3 个</span>
             </label>
-            <input
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              placeholder="证言记录, 历史档案, 二创作品"
-              className="w-full rounded-xl border border-input bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
-            />
+            <div className="flex flex-wrap gap-2">
+              {AVAILABLE_TAGS.map((tag) => {
+                const isSelected = selectedTags.includes(tag);
+                const isDisabled = !isSelected && selectedTags.length >= 3;
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedTags(selectedTags.filter((t) => t !== tag));
+                      } else if (selectedTags.length < 3) {
+                        setSelectedTags([...selectedTags, tag]);
+                      }
+                    }}
+                    disabled={isDisabled}
+                    className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+                      isSelected
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-muted-foreground hover:bg-primary/20 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Markdown Editor */}
