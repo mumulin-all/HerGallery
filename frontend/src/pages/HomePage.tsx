@@ -42,24 +42,6 @@ function FeaturedExhibition({ exhibition }: { exhibition: HomeExhibitionRecord }
   );
 }
 
-function HeroExhibition() {
-  return (
-    <Link to="/" className="group block">
-      <div className="flex items-center justify-between px-6 py-4 rounded-xl bg-gradient-to-r from-violet-900 to-purple-900">
-        <div className="flex items-center gap-4">
-          <span className="text-3xl text-violet-300">✿</span>
-          <div>
-            <h2 className="text-lg font-semibold text-white group-hover:text-violet-200 transition-colors">
-              她的展厅
-            </h2>
-            <p className="text-sm text-white/60">记录、创作、见证 — 链上属于她们的艺术空间</p>
-          </div>
-        </div>
-        <span className="text-white/40 text-2xl">→</span>
-      </div>
-    </Link>
-  );
-}
 
 function ProcessSection() {
   const steps = [
@@ -101,12 +83,6 @@ function TipSection() {
           >
             创建展厅
           </Link>
-          <a
-            href="#"
-            className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            赞赏我们
-          </a>
         </div>
       </div>
     </section>
@@ -189,11 +165,6 @@ const HomePage = () => {
 
         {!isLoading && !error && (
           <div className="space-y-10">
-            {/* Hero Exhibition */}
-            <section>
-              <HeroExhibition />
-            </section>
-
             {/* Featured Exhibitions */}
             {featuredExhibitions.length > 0 && (
               <section>

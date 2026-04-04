@@ -11,8 +11,18 @@ const Header = () => {
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const isHome = location.pathname === '/';
+
+  // Handle scroll for transparent header effect on home page
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const { data: hasSetUsername, refetch: refetchHasSetUsername } = useHasSetUsername(address || '');
   const { data: username, refetch: refetchUsername } = useUsername(address || '');
@@ -36,24 +46,54 @@ const Header = () => {
 
   const displayName = isConnected ? (username && username.trim() ? username.trim() : '云吃吃') : null;
 
+  // Determine header style based on page and scroll state
+  const getHeaderStyle = () => {
+    if (isHome) {
+      // On home page: transparent when not scrolled, gradient when scrolled
+      return isScrolled
+        ? 'bg-gradient-to-r from-violet-900/90 via-purple-900/80 to-fuchsia-900/80 backdrop-blur-md border-white/10'
+        : 'bg-transparent border-transparent';
+    }
+    return 'bg-background/80 backdrop-blur-md border-border';
+  };
+
+  const getTextColor = () => {
+    if (isHome) {
+      return isScrolled ? 'text-white' : 'text-white';
+    }
+    return 'text-foreground';
+  };
+
   return (
     <>
       <header
-        className={`sticky top-0 z-50 border-b transition-all duration-300 ${
-          isHome
-            ? 'bg-gradient-to-r from-violet-900/90 via-purple-900/80 to-fuchsia-900/80 backdrop-blur-md border-white/10'
-            : 'bg-background/80 backdrop-blur-md border-border'
-        }`}
+        className={`sticky top-0 z-50 border-b transition-all duration-300 ${getHeaderStyle()}`}
       >
         <div className="gallery-container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <span className={`text-xl font-bold ${isHome ? 'text-violet-300' : 'text-foreground'}`}>
+            <span className={`text-xl font-bold ${isHome ? (isScrolled ? 'text-violet-300' : 'text-white/80') : 'text-foreground'}`}>
               ✿
             </span>
-            <span className={`text-lg font-semibold tracking-tight ${isHome ? 'text-white' : 'text-foreground'}`}>
+            <span className={`text-lg font-semibold tracking-tight ${getTextColor()}`}>
               HerGallery
             </span>
           </Link>
+
+          {/* Search Input - Desktop */}
+          <div className="hidden md:flex items-center">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="搜索展厅、作品..."
+                className={`w-64 h-9 pl-9 pr-4 rounded-full text-sm transition-colors ${
+                  isHome
+                    ? 'bg-white/10 text-white placeholder:text-white/50 border border-white/20 focus:bg-white/20 focus:border-white/30'
+                    : 'bg-secondary text-foreground placeholder:text-muted-foreground border border-border focus:border-primary'
+                } focus:outline-none`}
+              />
+              <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${isHome ? 'text-white/50' : 'text-muted-foreground'}`}>🔍</span>
+            </div>
+          </div>
 
           <nav className="flex items-center gap-1">
             {navItems.map((item) => (
@@ -65,7 +105,7 @@ const Header = () => {
                 <span
                   className={
                     location.pathname === item.path
-                      ? isHome ? 'text-violet-200' : 'text-foreground'
+                      ? isHome ? (isScrolled ? 'text-violet-200' : 'text-white') : 'text-foreground'
                       : isHome
                         ? 'text-white/70 hover:text-white'
                         : 'text-muted-foreground hover:text-foreground'
@@ -76,7 +116,7 @@ const Header = () => {
                 {location.pathname === item.path && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full ${isHome ? 'bg-violet-400' : 'bg-foreground'}`}
+                    className={`absolute bottom-0 left-2 right-2 h-0.5 rounded-full ${isHome && isScrolled ? 'bg-violet-400' : 'bg-foreground'}`}
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -89,7 +129,7 @@ const Header = () => {
                   onClick={() => setShowUsernameModal(true)}
                   className={`flex h-9 items-center rounded-full border px-4 text-sm font-medium transition-colors cursor-pointer ${
                     isHome
-                      ? 'border-white/25 text-white hover:bg-white/10'
+                      ? (isScrolled ? 'border-white/25 text-white hover:bg-white/10' : 'border-white/20 text-white/80 hover:bg-white/10')
                       : 'border-border text-foreground hover:bg-secondary'
                   }`}
                 >
@@ -99,7 +139,7 @@ const Header = () => {
                   onClick={handleWalletClick}
                   className={`flex h-9 items-center rounded-full border px-3 text-sm font-medium transition-colors cursor-pointer ${
                     isHome
-                      ? 'border-white/20 text-white/60 hover:bg-white/10'
+                      ? (isScrolled ? 'border-white/20 text-white/60 hover:bg-white/10' : 'border-white/10 text-white/40 hover:bg-white/10')
                       : 'border-border text-muted-foreground hover:bg-secondary'
                   }`}
                   title="断开钱包"
@@ -112,7 +152,7 @@ const Header = () => {
                 onClick={handleWalletClick}
                 className={`ml-4 flex h-9 items-center rounded-full border px-4 text-sm font-medium transition-colors cursor-pointer ${
                   isHome
-                    ? 'border-white/30 text-white hover:bg-white/15'
+                    ? (isScrolled ? 'border-white/30 text-white hover:bg-white/15' : 'border-white/20 text-white/80 hover:bg-white/10')
                     : 'border-border text-foreground hover:bg-secondary'
                 }`}
               >
