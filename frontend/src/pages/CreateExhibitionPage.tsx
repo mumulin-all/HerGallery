@@ -32,10 +32,23 @@ const CreateExhibitionPage = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   const AVAILABLE_TAGS = [
-    '云吃吃们',
-    '她会创作',
-    '她的声音',
-    '你也会觉得有趣吧',
+    '网络帖子',
+    '维权',
+    '消费',
+    '公共安全',
+    '12315',
+    '母婴',
+    '健康',
+    '觉醒',
+    '诗歌',
+    '艺术',
+    '天空',
+    '景色',
+    '历史',
+    '母系',
+    '自然',
+    '女性联结',
+    '云吃吃',
   ];
 
   const creationFee = fee ? Number(fee) / 1e18 : 0.001;

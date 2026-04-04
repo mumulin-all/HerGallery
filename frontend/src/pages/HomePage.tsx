@@ -5,40 +5,114 @@ import { fetchHomeExhibitions, type HomeExhibitionRecord } from '@/hooks/useCont
 import { getAllIPFSUrls } from '@/services/ipfs';
 import { Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import LogoInviteSvgUrl from '@/assert/hg-logo-invite.svg?url';
 
-function FeaturedExhibition({ exhibition }: { exhibition: HomeExhibitionRecord }) {
+function FeaturedExhibition({ exhibition, index }: { exhibition: HomeExhibitionRecord; index: number }) {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const urls = exhibition.coverHash ? getAllIPFSUrls(exhibition.coverHash) : [];
+  const isReversed = index % 2 === 1;
+  const isPurple = index % 2 === 0;
 
   useEffect(() => {
     if (urls.length > 0) setCoverUrl(urls[0]);
   }, [exhibition.coverHash]);
 
   return (
-    <Link to={`/exhibition/${exhibition.id}`} className="group shrink-0 w-72 block">
-      <div className="overflow-hidden rounded-lg">
-        <div className="aspect-[4/3] bg-muted relative">
-          {coverUrl ? (
-            <img
-              src={coverUrl}
-              alt={exhibition.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted">
-              <span className="text-4xl opacity-30">✿</span>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <span className="text-xs text-white/60">{exhibition.tags[0]}</span>
-            <h3 className="text-sm font-medium text-white mt-1 group-hover:text-violet-200 transition-colors line-clamp-1">
-              {exhibition.title}
-            </h3>
+    <div className={`group relative flex flex-col md:flex-row ${isReversed ? 'md:flex-row-reverse' : ''} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${
+      isPurple
+        ? 'bg-gradient-to-br from-violet-200 via-purple-100 to-fuchsia-200 border border-violet-300/60'
+        : 'bg-gradient-to-br from-pink-200 via-rose-100 to-fuchsia-200 border border-pink-300/60'
+    }`}>
+
+      {/* Complex background decorations */}
+      <div className={`absolute inset-0 pointer-events-none overflow-hidden`}>
+        {/* Large gradient blob top */}
+        <div className={`absolute -top-20 ${isReversed ? '-right-20' : '-left-20'} w-72 h-72 rounded-full blur-3xl opacity-60 ${
+          isPurple ? 'bg-gradient-to-br from-violet-400/50 to-purple-500/40' : 'bg-gradient-to-br from-pink-400/50 to-rose-500/40'
+        }`} />
+        {/* Small accent blob bottom */}
+        <div className={`absolute -bottom-10 ${isReversed ? '-left-10' : '-right-10'} w-40 h-40 rounded-full blur-2xl opacity-50 ${
+          isPurple ? 'bg-gradient-to-tr from-fuchsia-400/60 to-violet-500/40' : 'bg-gradient-to-tr from-rose-400/60 to-pink-500/40'
+        }`} />
+        {/* Subtle grid pattern */}
+        <div className={`absolute inset-0 opacity-[0.04] ${isPurple ? 'bg-[linear-gradient(violet_1px,transparent_1px),linear-gradient(90deg,violet_1px,transparent_1px)]' : 'bg-[linear-gradient(pink_1px,transparent_1px),linear-gradient(90deg,pink_1px,transparent_1px)]'} bg-[size:24px_24px]`} />
+      </div>
+
+      {/* Image side */}
+      <Link to={`/exhibition/${exhibition.id}`} className="relative md:w-2/5 aspect-[4/3] md:aspect-auto block overflow-hidden z-10">
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            alt={exhibition.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className={`w-full h-full flex items-center justify-center ${
+            isPurple ? 'bg-gradient-to-br from-violet-200/60 to-purple-200/60' : 'bg-gradient-to-br from-pink-200/60 to-rose-200/60'
+          }`}>
+            <span className="text-5xl opacity-30">✿</span>
           </div>
+        )}
+        {/* Image overlay gradient */}
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+      </Link>
+
+      {/* Content side - Invitation style with logo */}
+      <div className="relative md:w-3/5 p-6 md:p-8 flex flex-col justify-center z-10">
+        {/* Large decorative logo watermark */}
+        <div className={`absolute ${isReversed ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 w-40 h-40 select-pointer pointer-events-none opacity-[0.15]`}>
+          <img src={LogoInviteSvgUrl} alt="" className="w-full h-full object-contain" />
+        </div>
+
+        {/* Top decorative line */}
+        <div className={`flex items-center gap-3 mb-4`}>
+          <div className={`h-px flex-1 bg-gradient-to-r from-transparent ${isPurple ? 'via-violet-400 to-violet-500' : 'via-pink-400 to-pink-500'}`} />
+          <span className={`text-xs font-medium tracking-widest ${isPurple ? 'text-violet-500' : 'text-pink-500'}`}>邀请函</span>
+          <div className={`h-px flex-1 bg-gradient-to-l from-transparent ${isPurple ? 'via-violet-400 to-violet-500' : 'via-pink-400 to-pink-500'}`} />
+        </div>
+
+        {/* Title */}
+        <h3 className={`text-lg md:text-xl font-semibold group-hover:text-${isPurple ? 'violet-600' : 'pink-600'} transition-colors leading-snug mb-2 ${isPurple ? 'text-violet-900' : 'text-pink-900'}`}>
+          {exhibition.title}
+        </h3>
+
+        {/* Tags */}
+        <div className="flex items-center gap-2 mb-3">
+          {exhibition.tags.slice(0, 2).map((tag) => (
+            <span key={tag} className={`text-xs px-2 py-0.5 rounded-full ${isPurple ? 'bg-violet-100/80 text-violet-600' : 'bg-pink-100/80 text-pink-600'}`}>
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* Description */}
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+          {exhibition.content || '暂无描述'}
+        </p>
+
+        {/* Bottom section with stats and CTA */}
+        <div className={`flex items-center justify-between pt-2 border-t ${isPurple ? 'border-violet-200/50' : 'border-pink-200/50'}`}>
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-muted-foreground">
+              <span className={`font-medium ${isPurple ? 'text-violet-600' : 'text-pink-600'}`}>{exhibition.submissionCount || 0}</span> 件作品
+            </span>
+            <span className="text-xs text-muted-foreground">
+              <span className={`font-medium ${isPurple ? 'text-fuchsia-500' : 'text-rose-500'}`}>{exhibition.hotScore || 0}</span> 次托举
+            </span>
+          </div>
+          <Link
+            to={`/exhibition/${exhibition.id}`}
+            className={`inline-flex items-center gap-1 text-xs font-medium transition-colors group/link ${isPurple ? 'text-violet-600 hover:text-violet-700' : 'text-pink-600 hover:text-pink-700'}`}
+          >
+            <span className="relative">
+              前往
+              <span className={`absolute -bottom-0.5 left-0 w-0 h-px ${isPurple ? 'bg-violet-600' : 'bg-pink-600'} group-hover/link:w-full transition-all duration-300`} />
+            </span>
+            <span className="transform group-hover/link:translate-x-0.5 transition-transform">→</span>
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -93,6 +167,7 @@ const HomePage = () => {
   const [exhibitions, setExhibitions] = useState<HomeExhibitionRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('全部');
   const [activeTag, setActiveTag] = useState<string>('全部');
 
   useEffect(() => {
@@ -122,17 +197,16 @@ const HomePage = () => {
     };
   }, []);
 
-  const AVAILABLE_TAGS = [
-    '云吃吃们',
-    '她会创作',
-    '她的声音',
-    '你也会觉得有趣吧',
-  ];
-
-  const tags = useMemo(() => {
-    // Show predefined tags plus '全部'
-    return ['全部', ...AVAILABLE_TAGS];
-  }, []);
+  const TAG_CATEGORIES = {
+    '全部': [
+      '网络帖子', '维权', '消费', '公共安全', '12315', '母婴', '健康',
+      '觉醒', '诗歌', '艺术', '天空', '景色', '历史',
+      '母系', '自然', '女性联结', '云吃吃',
+    ],
+    '存证类': ['网络帖子', '维权', '消费', '公共安全', '12315', '母婴', '健康'],
+    '创作类': ['觉醒', '诗歌', '艺术', '天空', '景色', '历史'],
+    '社群类': ['云吃吃', '女性联结', '母系', '自然'],
+  };
 
   const sortedExhibitions = useMemo(
     () => [...exhibitions].sort((left, right) => right.hotScore - left.hotScore),
@@ -142,11 +216,20 @@ const HomePage = () => {
   const featuredExhibitions = sortedExhibitions.slice(0, 4);
 
   const filteredExhibitions = useMemo(() => {
-    if (activeTag === '全部') {
-      return sortedExhibitions;
+    if (activeCategory === '全部') {
+      if (activeTag === '全部') return sortedExhibitions;
+      return sortedExhibitions.filter((exhibition) => exhibition.tags.includes(activeTag));
     }
-    return sortedExhibitions.filter((exhibition) => exhibition.tags.includes(activeTag));
-  }, [activeTag, sortedExhibitions]);
+    const categoryTags = TAG_CATEGORIES[activeCategory as keyof typeof TAG_CATEGORIES];
+    if (activeTag === '全部') {
+      return sortedExhibitions.filter((exhibition) =>
+        exhibition.tags.some((t) => categoryTags.includes(t))
+      );
+    }
+    return sortedExhibitions.filter((exhibition) =>
+      exhibition.tags.includes(activeTag) && exhibition.tags.some((t) => categoryTags.includes(t))
+    );
+  }, [activeCategory, activeTag, sortedExhibitions]);
 
   return (
     <Layout>
@@ -171,9 +254,9 @@ const HomePage = () => {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">精选</h2>
                 </div>
-                <div className="flex gap-4 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
-                  {featuredExhibitions.map((exhibition) => (
-                    <FeaturedExhibition key={exhibition.id} exhibition={exhibition} />
+                <div className="space-y-6">
+                  {featuredExhibitions.slice(0, 3).map((exhibition, idx) => (
+                    <FeaturedExhibition key={exhibition.id} exhibition={exhibition} index={idx} />
                   ))}
                 </div>
               </section>
@@ -183,22 +266,51 @@ const HomePage = () => {
             <div className="flex gap-8">
               {/* Left Sidebar - Tags */}
               <aside className="w-36 shrink-0">
-                <div className="sticky top-24">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">分类</p>
-                  <div className="space-y-1 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/50">
-                    {tags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => setActiveTag(tag)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                          activeTag === tag
-                            ? 'bg-primary text-primary-foreground font-medium'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                <div className="sticky top-24 space-y-4">
+                  {/* Primary: Categories */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">分类</p>
+                    <div className="space-y-0.5">
+                      {Object.keys(TAG_CATEGORIES).map((category) => (
+                        <button
+                          key={category}
+                          onClick={() => {
+                            setActiveCategory(category);
+                            setActiveTag('全部');
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                            activeCategory === category
+                              ? 'bg-primary text-primary-foreground font-medium'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Secondary: Tags within category */}
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">标签</p>
+                    <div className="space-y-0.5 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
+                      {(activeCategory === '全部'
+                        ? TAG_CATEGORIES['全部']
+                        : TAG_CATEGORIES[activeCategory as keyof typeof TAG_CATEGORIES]
+                      ).map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setActiveTag(tag)}
+                          className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
+                            activeTag === tag
+                              ? 'bg-violet-100 text-violet-700 font-medium'
+                              : 'text-muted-foreground/70 hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </aside>
