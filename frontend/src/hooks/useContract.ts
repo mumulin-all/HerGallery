@@ -15,6 +15,7 @@ export interface UserSubmissionRecord extends Submission {
 
 export interface UserActivitySummary {
   submissions: UserSubmissionRecord[];
+  myExhibitions: Exhibition[];
   hasFirstSubmissionBadge: boolean;
   hasFirstExhibitionBadge: boolean;
   milestoneBadges: Array<{
@@ -619,8 +620,13 @@ export async function fetchUserActivity(address: string): Promise<UserActivitySu
       recommendCount: submission.recommendCount,
     }));
 
+  const myExhibitions = exhibitions
+    .filter((exhibition) => exhibition.curator.toLowerCase() === normalizedAddress)
+    .sort((a, b) => b.createdAt - a.createdAt);
+
   return {
     submissions,
+    myExhibitions,
     hasFirstSubmissionBadge: Boolean(rawHasSubmitted),
     hasFirstExhibitionBadge: Boolean(rawHasCreatedExhibition),
     milestoneBadges,
