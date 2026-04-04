@@ -49,8 +49,9 @@ const ExhibitionDetailPage = () => {
     }
   };
 
-  const { submitToExhibition } = useSubmitToExhibition(() => {
+  const { submitToExhibition } = useSubmitToExhibition(async () => {
     toast.success('投稿已提交，等待策展人审核');
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     refetchSubmissions();
     if (!hasSubmittedBefore) {
       triggerFirstSubmission();
@@ -80,7 +81,6 @@ const ExhibitionDetailPage = () => {
         title: data.title,
         description: data.description,
       });
-      toast.success('交易已发送，请等待确认...');
     } catch (err: any) {
       toast.error(err.message || '投稿失败，请重试');
     }
@@ -96,7 +96,7 @@ const ExhibitionDetailPage = () => {
     );
   }
 
-  if (exhibitionError || !exhibition) {
+  if (!exhibition) {
     return (
       <Layout>
         <div className="gallery-container py-24 text-center">

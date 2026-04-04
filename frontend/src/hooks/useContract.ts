@@ -58,7 +58,7 @@ export function useSubmissions(exhibitionId: number) {
     abi: CONTRACT_ABI,
     functionName: 'getSubmissions',
     args: [BigInt(exhibitionId)],
-    query: { enabled: exhibitionId >= 0, refetchInterval: 5000 },
+    query: { enabled: exhibitionId >= 0, refetchInterval: 5000, staleTime: 0 },
   });
 }
 
