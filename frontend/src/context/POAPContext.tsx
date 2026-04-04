@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useState } from 'react';
 
-export type POAPType = 'firstSubmission' | 'milestone';
+export type POAPType = 'firstSubmission' | 'firstExhibition' | 'milestone';
 
 export interface POAPPayload {
   type: POAPType;
@@ -10,6 +10,7 @@ export interface POAPPayload {
 
 interface POAPContextValue {
   triggerFirstSubmission: () => void;
+  triggerFirstExhibition: () => void;
   triggerMilestone: (submissionTitle: string, recommendCount: number) => void;
 }
 
@@ -42,12 +43,16 @@ export function POAPProvider({ children }: Props) {
     enqueue({ type: 'firstSubmission' });
   }, [enqueue]);
 
+  const triggerFirstExhibition = useCallback(() => {
+    enqueue({ type: 'firstExhibition' });
+  }, [enqueue]);
+
   const triggerMilestone = useCallback((submissionTitle: string, recommendCount: number) => {
     enqueue({ type: 'milestone', submissionTitle, recommendCount });
   }, [enqueue]);
 
   return (
-    <POAPContext.Provider value={{ triggerFirstSubmission, triggerMilestone }}>
+    <POAPContext.Provider value={{ triggerFirstSubmission, triggerFirstExhibition, triggerMilestone }}>
       {children}
       {current && <POAPModal payload={current} onClose={dismiss} />}
     </POAPContext.Provider>
@@ -65,6 +70,13 @@ const BADGE_CONFIG: Record<POAPType, { icon: string; title: string; color: strin
     color: 'text-violet-600',
     bg: 'bg-violet-50 border-violet-200',
     ring: 'ring-violet-300/60',
+  },
+  firstExhibition: {
+    icon: '🏛️',
+    title: '首个展厅诞生！',
+    color: 'text-rose-600',
+    bg: 'bg-rose-50 border-rose-200',
+    ring: 'ring-rose-300/60',
   },
   milestone: {
     icon: '✦',
@@ -122,6 +134,11 @@ function POAPModal({ payload, onClose }: { payload: POAPPayload; onClose: () => 
           {payload.type === 'firstSubmission' && (
             <p className="text-sm text-muted-foreground leading-relaxed">
               你完成了第一次投稿！这份记录已永久上链，无法删除。
+            </p>
+          )}
+          {payload.type === 'firstExhibition' && (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              你创建了第一个展厅！这是属于你的记录空间，永久留存于链上。
             </p>
           )}
           {payload.type === 'milestone' && (

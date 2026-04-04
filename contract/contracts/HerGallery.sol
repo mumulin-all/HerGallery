@@ -55,6 +55,7 @@ contract HerGallery is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     mapping(address => bool) public hasSubmitted;
     mapping(address => string) public usernames;
     mapping(address => bool) public hasSetUsername;
+    mapping(address => bool) public hasCreatedExhibition;
 
     event ExhibitionCreated(uint256 indexed id, string title, address indexed curator);
     event SubmissionCreated(uint256 indexed id, uint256 indexed exhibitionId, address indexed creator);
@@ -68,6 +69,7 @@ contract HerGallery is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event TipReceived(address indexed sender, uint256 indexed exhibitionId, uint256 amount, bool isPlatformTip);
     event TipsWithdrawn(uint256 indexed exhibitionId, address indexed curator, uint256 amount);
     event FirstSubmission(address indexed user, uint256 submissionId);
+    event FirstExhibition(address indexed curator, uint256 exhibitionId);
     event RecommendMilestone(address indexed creator, uint256 submissionId, uint256 recommendCount);
     event UsernameSet(address indexed user, string username);
 
@@ -130,6 +132,11 @@ contract HerGallery is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         }
 
         emit ExhibitionCreated(exhibitionId, title, msg.sender);
+
+        if (!hasCreatedExhibition[msg.sender]) {
+            hasCreatedExhibition[msg.sender] = true;
+            emit FirstExhibition(msg.sender, exhibitionId);
+        }
     }
 
     function getExhibition(uint256 exhibitionId) external view exhibitionExists(exhibitionId) returns (Exhibition memory) {

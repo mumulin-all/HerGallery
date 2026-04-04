@@ -138,6 +138,13 @@ export const CONTRACT_ABI = [
     type: 'function',
   },
   {
+    inputs: [{ name: 'user', type: 'address' }],
+    name: 'hasCreatedExhibition',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [
       { name: 'title', type: 'string' },
       { name: 'content', type: 'string' },

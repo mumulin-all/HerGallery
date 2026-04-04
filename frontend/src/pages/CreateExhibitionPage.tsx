@@ -4,15 +4,21 @@ import { useAccount } from 'wagmi';
 import { Upload, X, Loader2 } from 'lucide-react';
 import Layout from '@/components/Layout/Layout';
 import { toast } from 'sonner';
-import { useCreateExhibition, useCreationFee } from '@/hooks/useContract';
+import { useCreateExhibition, useCreationFee, useHasCreatedExhibition } from '@/hooks/useContract';
 import { uploadFileToIPFS } from '@/services/ipfs';
+import { usePOAP } from '@/context/POAPContext';
 
 const CreateExhibitionPage = () => {
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { data: fee } = useCreationFee();
+  const { triggerFirstExhibition } = usePOAP();
+  const { data: hasCreatedExhibitionBefore } = useHasCreatedExhibition(address || '');
   const { createExhibition } = useCreateExhibition(() => {
     toast.success('展厅创建成功！');
+    if (!hasCreatedExhibitionBefore) {
+      triggerFirstExhibition();
+    }
     navigate('/');
   });
 

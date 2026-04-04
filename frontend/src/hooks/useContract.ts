@@ -16,6 +16,7 @@ export interface UserSubmissionRecord extends Submission {
 export interface UserActivitySummary {
   submissions: UserSubmissionRecord[];
   hasFirstSubmissionBadge: boolean;
+  hasFirstExhibitionBadge: boolean;
   milestoneBadges: Array<{
     submissionId: number;
     exhibitionId: number;
@@ -123,6 +124,16 @@ export function useHasSubmitted(address: string) {
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: 'hasSubmitted',
+    args: [address as `0x${string}`],
+    query: { enabled: !!address },
+  });
+}
+
+export function useHasCreatedExhibition(address: string) {
+  return useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'hasCreatedExhibition',
     args: [address as `0x${string}`],
     query: { enabled: !!address },
   });
@@ -551,7 +562,7 @@ export function parseSubmissions(raw: any): Submission[] {
 export async function fetchUserActivity(address: string): Promise<UserActivitySummary> {
   const normalizedAddress = address.toLowerCase();
 
-  const [rawExhibitions, rawHasSubmitted] = await Promise.all([
+  const [rawExhibitions, rawHasSubmitted, rawHasCreatedExhibition] = await Promise.all([
     publicClient.readContract({
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
@@ -561,6 +572,12 @@ export async function fetchUserActivity(address: string): Promise<UserActivitySu
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: 'hasSubmitted',
+      args: [address as `0x${string}`],
+    }),
+    publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'hasCreatedExhibition',
       args: [address as `0x${string}`],
     }),
   ]);
@@ -605,6 +622,7 @@ export async function fetchUserActivity(address: string): Promise<UserActivitySu
   return {
     submissions,
     hasFirstSubmissionBadge: Boolean(rawHasSubmitted),
+    hasFirstExhibitionBadge: Boolean(rawHasCreatedExhibition),
     milestoneBadges,
   };
 }

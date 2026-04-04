@@ -31,6 +31,15 @@ const BADGE_DEFS: BadgeDef[] = [
     ring: 'ring-2 ring-violet-300/60',
   },
   {
+    id: 'firstExhibition',
+    icon: '🏛️',
+    label: '展厅创始人',
+    desc: '创建第一个展厅',
+    color: 'text-rose-500',
+    bg: 'bg-rose-50 border-rose-200',
+    ring: 'ring-2 ring-rose-300/60',
+  },
+  {
     id: 'milestone',
     icon: '✦',
     label: '推荐里程碑',
@@ -44,6 +53,7 @@ const BADGE_DEFS: BadgeDef[] = [
 function BadgeWall({ summary }: { summary: UserActivitySummary }) {
   const unlockedIds = new Set<string>();
   if (summary.hasFirstSubmissionBadge) unlockedIds.add('firstSubmission');
+  if (summary.hasFirstExhibitionBadge) unlockedIds.add('firstExhibition');
   if (summary.milestoneBadges.length > 0) unlockedIds.add('milestone');
   const milestoneCount = summary.milestoneBadges.length;
 
@@ -106,6 +116,9 @@ function BadgeWall({ summary }: { summary: UserActivitySummary }) {
                 {def.id === 'firstSubmission' && (
                   <p className="mt-0.5 text-[11px] text-muted-foreground">链上首次投稿记录已永久存证</p>
                 )}
+                {def.id === 'firstExhibition' && (
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">链上首个展厅已永久存证</p>
+                )}
               </div>
             </div>
           ))}
@@ -120,6 +133,7 @@ function BadgeWall({ summary }: { summary: UserActivitySummary }) {
 const emptySummary: UserActivitySummary = {
   submissions: [],
   hasFirstSubmissionBadge: false,
+  hasFirstExhibitionBadge: false,
   milestoneBadges: [],
 };
 
