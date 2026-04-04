@@ -11,31 +11,20 @@ function FeaturedExhibition({ exhibition, index }: { exhibition: HomeExhibitionR
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const urls = exhibition.coverHash ? getAllIPFSUrls(exhibition.coverHash) : [];
   const isReversed = index % 2 === 1;
-  const isPurple = index % 2 === 0;
 
   useEffect(() => {
     if (urls.length > 0) setCoverUrl(urls[0]);
   }, [exhibition.coverHash]);
 
   return (
-    <div className={`group relative flex flex-col md:flex-row ${isReversed ? 'md:flex-row-reverse' : ''} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${
-      isPurple
-        ? 'bg-gradient-to-br from-violet-200 via-purple-100 to-fuchsia-200 border border-violet-300/60'
-        : 'bg-gradient-to-br from-pink-200 via-rose-100 to-fuchsia-200 border border-pink-300/60'
-    }`}>
+    <div className={`group relative flex flex-col md:flex-row ${isReversed ? 'md:flex-row-reverse' : ''} rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-violet-100 via-purple-50 to-fuchsia-100 border border-violet-200`}>
 
       {/* Complex background decorations */}
-      <div className={`absolute inset-0 pointer-events-none overflow-hidden`}>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Large gradient blob top */}
-        <div className={`absolute -top-20 ${isReversed ? '-right-20' : '-left-20'} w-72 h-72 rounded-full blur-3xl opacity-60 ${
-          isPurple ? 'bg-gradient-to-br from-violet-400/50 to-purple-500/40' : 'bg-gradient-to-br from-pink-400/50 to-rose-500/40'
-        }`} />
+        <div className={`absolute -top-20 ${isReversed ? '-right-20' : '-left-20'} w-72 h-72 rounded-full blur-3xl opacity-60 bg-gradient-to-br from-violet-300/50 to-purple-300/40`} />
         {/* Small accent blob bottom */}
-        <div className={`absolute -bottom-10 ${isReversed ? '-left-10' : '-right-10'} w-40 h-40 rounded-full blur-2xl opacity-50 ${
-          isPurple ? 'bg-gradient-to-tr from-fuchsia-400/60 to-violet-500/40' : 'bg-gradient-to-tr from-rose-400/60 to-pink-500/40'
-        }`} />
-        {/* Subtle grid pattern */}
-        <div className={`absolute inset-0 opacity-[0.04] ${isPurple ? 'bg-[linear-gradient(violet_1px,transparent_1px),linear-gradient(90deg,violet_1px,transparent_1px)]' : 'bg-[linear-gradient(pink_1px,transparent_1px),linear-gradient(90deg,pink_1px,transparent_1px)]'} bg-[size:24px_24px]`} />
+        <div className={`absolute -bottom-10 ${isReversed ? '-left-10' : '-right-10'} w-40 h-40 rounded-full blur-2xl opacity-50 bg-gradient-to-tr from-fuchsia-300/60 to-violet-300/40`} />
       </div>
 
       {/* Image side */}
@@ -47,14 +36,12 @@ function FeaturedExhibition({ exhibition, index }: { exhibition: HomeExhibitionR
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className={`w-full h-full flex items-center justify-center ${
-            isPurple ? 'bg-gradient-to-br from-violet-200/60 to-purple-200/60' : 'bg-gradient-to-br from-pink-200/60 to-rose-200/60'
-          }`}>
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-200/60 to-purple-200/60">
             <span className="text-5xl opacity-30">✿</span>
           </div>
         )}
         {/* Image overlay gradient */}
-        <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Link>
 
       {/* Content side - Invitation style with logo */}
@@ -65,48 +52,48 @@ function FeaturedExhibition({ exhibition, index }: { exhibition: HomeExhibitionR
         </div>
 
         {/* Top decorative line */}
-        <div className={`flex items-center gap-3 mb-4`}>
-          <div className={`h-px flex-1 bg-gradient-to-r from-transparent ${isPurple ? 'via-violet-400 to-violet-500' : 'via-pink-400 to-pink-500'}`} />
-          <span className={`text-xs font-medium tracking-widest ${isPurple ? 'text-violet-500' : 'text-pink-500'}`}>邀请函</span>
-          <div className={`h-px flex-1 bg-gradient-to-l from-transparent ${isPurple ? 'via-violet-400 to-violet-500' : 'via-pink-400 to-pink-500'}`} />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-400 to-violet-500" />
+          <span className="text-xs font-medium tracking-widest text-violet-500">邀请函</span>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent via-violet-400 to-violet-500" />
         </div>
 
         {/* Title */}
-        <h3 className={`text-lg md:text-xl font-semibold group-hover:text-${isPurple ? 'violet-600' : 'pink-600'} transition-colors leading-snug mb-2 ${isPurple ? 'text-violet-900' : 'text-pink-900'}`}>
+        <h3 className="text-lg md:text-xl font-semibold group-hover:text-violet-600 transition-colors leading-snug mb-2 text-violet-900">
           {exhibition.title}
         </h3>
 
         {/* Tags */}
         <div className="flex items-center gap-2 mb-3">
           {exhibition.tags.slice(0, 2).map((tag) => (
-            <span key={tag} className={`text-xs px-2 py-0.5 rounded-full ${isPurple ? 'bg-violet-100/80 text-violet-600' : 'bg-pink-100/80 text-pink-600'}`}>
+            <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-violet-100/80 text-violet-600">
               {tag}
             </span>
           ))}
         </div>
 
         {/* Description */}
-        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+        <p className="text-xs text-violet-700/70 line-clamp-2 leading-relaxed mb-4">
           {exhibition.content || '暂无描述'}
         </p>
 
         {/* Bottom section with stats and CTA */}
-        <div className={`flex items-center justify-between pt-2 border-t ${isPurple ? 'border-violet-200/50' : 'border-pink-200/50'}`}>
+        <div className="flex items-center justify-between pt-2 border-t border-violet-200/50">
           <div className="flex items-center gap-4">
-            <span className="text-xs text-muted-foreground">
-              <span className={`font-medium ${isPurple ? 'text-violet-600' : 'text-pink-600'}`}>{exhibition.submissionCount || 0}</span> 件作品
+            <span className="text-xs text-violet-600/60">
+              <span className="font-medium text-violet-600">{exhibition.submissionCount || 0}</span> 件作品
             </span>
-            <span className="text-xs text-muted-foreground">
-              <span className={`font-medium ${isPurple ? 'text-fuchsia-500' : 'text-rose-500'}`}>{exhibition.hotScore || 0}</span> 次托举
+            <span className="text-xs text-violet-600/60">
+              <span className="font-medium text-fuchsia-500">{exhibition.hotScore || 0}</span> 次托举
             </span>
           </div>
           <Link
             to={`/exhibition/${exhibition.id}`}
-            className={`inline-flex items-center gap-1 text-xs font-medium transition-colors group/link ${isPurple ? 'text-violet-600 hover:text-violet-700' : 'text-pink-600 hover:text-pink-700'}`}
+            className="inline-flex items-center gap-1 text-xs font-medium transition-colors group/link text-violet-600 hover:text-violet-700"
           >
             <span className="relative">
               前往
-              <span className={`absolute -bottom-0.5 left-0 w-0 h-px ${isPurple ? 'bg-violet-600' : 'bg-pink-600'} group-hover/link:w-full transition-all duration-300`} />
+              <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-violet-600 group-hover/link:w-full transition-all duration-300" />
             </span>
             <span className="transform group-hover/link:translate-x-0.5 transition-transform">→</span>
           </Link>

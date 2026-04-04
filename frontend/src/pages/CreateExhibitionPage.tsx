@@ -20,7 +20,7 @@ const CreateExhibitionPage = () => {
     if (!hasCreatedExhibitionBefore) {
       triggerFirstExhibition();
     }
-    navigate('/');
+    navigate('/gallery');
   });
 
   const [title, setTitle] = useState('');
