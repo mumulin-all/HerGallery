@@ -146,13 +146,17 @@ const HomePage = () => {
     };
   }, []);
 
+  const AVAILABLE_TAGS = [
+    '云吃吃们',
+    '她会创作',
+    '她的声音',
+    '你也会觉得有趣吧',
+  ];
+
   const tags = useMemo(() => {
-    const values = new Set<string>();
-    exhibitions.forEach((exhibition) => {
-      exhibition.tags.forEach((tag) => values.add(tag));
-    });
-    return ['全部', ...Array.from(values)];
-  }, [exhibitions]);
+    // Show predefined tags plus '全部'
+    return ['全部', ...AVAILABLE_TAGS];
+  }, []);
 
   const sortedExhibitions = useMemo(
     () => [...exhibitions].sort((left, right) => right.hotScore - left.hotScore),
