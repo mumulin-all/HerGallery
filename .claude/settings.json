@@ -7,7 +7,13 @@
       "Bash(xargs kill:*)",
       "WebFetch(domain:forensic-architecture.org)",
       "Bash(npx tsc:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(python3 -)",
+      "Bash(python3 -c ':*)",
+      "Bash(python3 /dev/stdin)",
+      "Bash(python3 -c \"print\\('hello'\\)\")",
+      "Bash(where python3:*)",
+      "Bash(node -e ':*)"
     ]
   }
 }

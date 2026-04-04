@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0xd6827290a2Ef02e51382A3C4ECc6C5f7b74FDCE7' as const;
+export const CONTRACT_ADDRESS = '0xb8e2a851B52Ab5887E4e9677C6fe2A3ACa2Dc0BF' as const;
 
 export const AVALANCHE_FUJI = {
   id: 43113,

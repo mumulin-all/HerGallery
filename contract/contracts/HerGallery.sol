@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.22;
 
-contract HerGallery {
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+contract HerGallery is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     enum SubmissionStatus {
         PENDING,
         APPROVED,
@@ -40,7 +44,6 @@ contract HerGallery {
     uint256 public constant CREATION_FEE = 0.001 ether;
     uint256 public constant MIN_SUBMISSIONS_FOR_STAKE_WITHDRAWAL = 10;
 
-    address public immutable owner;
     uint256 public platformTipPool;
 
     Exhibition[] private exhibitions;
@@ -68,9 +71,13 @@ contract HerGallery {
     event RecommendMilestone(address indexed creator, uint256 submissionId, uint256 recommendCount);
     event UsernameSet(address indexed user, string username);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner");
-        _;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address initialOwner) public initializer {
+        __Ownable_init(initialOwner);
     }
 
     modifier exhibitionExists(uint256 exhibitionId) {
@@ -83,9 +90,7 @@ contract HerGallery {
         _;
     }
 
-    constructor() {
-        owner = msg.sender;
-    }
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function setUsername(string memory username) external {
         bytes memory usernameBytes = bytes(username);
