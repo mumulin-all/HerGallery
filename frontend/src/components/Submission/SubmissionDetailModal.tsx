@@ -24,6 +24,7 @@ interface SubmissionContent {
 const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
   const [currentGateway, setCurrentGateway] = useState(0);
   const [isFlagging, setIsFlagging] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const { flagSubmission } = useFlagSubmission(() => {
     toast.success('投稿已隐藏');
@@ -73,7 +74,7 @@ const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-lg rounded-2xl bg-card border border-border p-6 shadow-xl"
+          className="relative z-10 w-full max-w-lg max-h-[90vh] rounded-2xl bg-card border border-border p-6 shadow-xl overflow-y-auto"
         >
           <button
             onClick={onClose}
@@ -118,11 +119,40 @@ const SubmissionDetailModal = ({ submission, isCurator, onClose }: Props) => {
               <img
                 src={imageUrl}
                 alt={submission.title}
-                className="w-full h-auto object-contain max-h-96"
+                className="w-full h-auto object-contain max-h-96 cursor-pointer hover:opacity-90 transition-opacity"
                 onError={handleImageError}
+                onClick={() => setImagePreview(imageUrl)}
               />
             </div>
           )}
+
+          {/* Image Lightbox */}
+          <AnimatePresence>
+            {imagePreview && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4"
+                onClick={() => setImagePreview(null)}
+              >
+                <button
+                  className="absolute top-4 right-4 text-white/70 hover:text-white text-2xl"
+                  onClick={() => setImagePreview(null)}
+                >
+                  ✕
+                </button>
+                <motion.img
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.9 }}
+                  src={imagePreview}
+                  alt={submission.title}
+                  className="max-w-full max-h-full object-contain"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
             <DisplayName address={submission.creator} />
