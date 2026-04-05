@@ -28,6 +28,7 @@ const CreateExhibitionPage = () => {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [customTag, setCustomTag] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -185,7 +186,7 @@ const CreateExhibitionPage = () => {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               标签 <span className="text-xs text-muted-foreground">最多 3 个</span>
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-2">
               {AVAILABLE_TAGS.map((tag) => {
                 const isSelected = selectedTags.includes(tag);
                 const isDisabled = !isSelected && selectedTags.length >= 3;
@@ -212,6 +213,40 @@ const CreateExhibitionPage = () => {
                 );
               })}
             </div>
+            {/* Custom tag input */}
+            {selectedTags.length < 3 && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customTag}
+                  onChange={(e) => setCustomTag(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && customTag.trim()) {
+                      e.preventDefault();
+                      if (!selectedTags.includes(customTag.trim()) && selectedTags.length < 3) {
+                        setSelectedTags([...selectedTags, customTag.trim()]);
+                        setCustomTag('');
+                      }
+                    }
+                  }}
+                  placeholder="输入自定义标签后回车添加"
+                  className="flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customTag.trim() && !selectedTags.includes(customTag.trim()) && selectedTags.length < 3) {
+                      setSelectedTags([...selectedTags, customTag.trim()]);
+                      setCustomTag('');
+                    }
+                  }}
+                  disabled={!customTag.trim() || selectedTags.length >= 3}
+                  className="rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  添加
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Markdown Editor */}
