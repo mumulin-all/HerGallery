@@ -521,7 +521,7 @@ const LandingPage = () => {
                   title: '观众',
                   color: 'amber',
                   steps: [
-                    { num: '01', title: '推荐', desc: '托举优质内容，让有价值的声音被看见' },
+                    { num: '01', title: '托举', desc: '托举优质内容，让有价值的声音被看见' },
                     { num: '02', title: '见证', desc: '说出「我知道这件事发生过」' },
                     { num: '03', title: '打赏', desc: '支持策展人，让展厅持续生长' },
                   ],
