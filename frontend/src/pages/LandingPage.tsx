@@ -110,7 +110,7 @@ function CarouselCard({
         <p className="mt-0.5 text-xs text-white/60">{shortenAddress(exhibition.curator)}</p>
         <div className="mt-2 flex gap-3 text-xs text-white/60">
           <span>{exhibition.submissionCount} 投稿</span>
-          <span>{exhibition.totalRecommends} 推荐</span>
+          <span>{exhibition.totalRecommends} 托举</span>
         </div>
       </div>
     </Link>
@@ -178,13 +178,13 @@ const FEATURES = [
   },
   {
     icon: '👍',
-    title: '推荐与见证',
-    desc: '读者可推荐优质投稿为其背书，也可见证某条记录，让每一次互动都成为链上可查的历史印记。',
+    title: '托举与见证',
+    desc: '读者可托举优质投稿为其背书，也可见证某条记录，让每一次互动都成为链上可查的历史印记。',
   },
   {
     icon: '🏅',
     title: 'POAP 徽章',
-    desc: '完成首次投稿、推荐数达到里程碑等关键行为，将即时解锁专属的链上成就徽章，彰显你的参与轨迹。',
+    desc: '完成首次投稿、托举数达到里程碑等关键行为，将即时解锁专属的链上成就徽章，彰显你的参与轨迹。',
   },
 ];
 
@@ -386,7 +386,7 @@ const LandingPage = () => {
           >
             为女性创作者而建的链上永久画廊
             <br />
-            存证、推荐、见证 — 每一份记录都属于她
+            存证、托举、见证 — 每一份记录都属于她
           </motion.p>
 
           <motion.div
@@ -442,7 +442,7 @@ const LandingPage = () => {
               🔥 热门展厅
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              根据推荐数与活跃度综合排名的前五名展厅
+              根据托举数与活跃度综合排名的前五名展厅
             </p>
           </div>
           <ExhibitionCarousel exhibitions={topExhibitions} />
@@ -489,7 +489,7 @@ const LandingPage = () => {
               {[
                 { step: '01', title: '连接钱包', desc: '使用 MetaMask 等 Web3 钱包连接，切换到 Avalanche Fuji 测试网' },
                 { step: '02', title: '创建或投稿', desc: '发起一个展厅，或在感兴趣的展厅中投递你的作品与存证' },
-                { step: '03', title: '推荐与收获徽章', desc: '为喜欢的投稿点推荐，见证重要记录，完成里程碑解锁 POAP' },
+                { step: '03', title: '托举与收获徽章', desc: '为喜欢的投稿点托举，见证重要记录，完成里程碑解锁 POAP' },
               ].map((s) => (
                 <motion.div
                   key={s.step}
@@ -562,7 +562,7 @@ const LandingPage = () => {
             <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-violet-200/70">
               在一个内容随时可能被删除、平台随时可能关闭的网络里，
               HerGallery 用区块链为女性创作者提供一个不可撤销的存在证明。
-              每一篇投稿、每一个推荐，都是无法被抹去的历史。
+              每一篇投稿、每一次托举，都是无法被抹去的历史。
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-violet-300/80">
               <span>✦ 永久存证</span>
